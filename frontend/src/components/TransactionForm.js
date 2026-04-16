@@ -75,8 +75,8 @@ export default function TransactionForm({ onSuccess, initialData, onCancel }) {
           <span>Categoria</span>
           <select name="category" value={form.category} onChange={handleChange} required>
             <option value="">Selecione</option>
-            {categories
-              ?.filter((category) => category.type === form.type && category.is_active)
+            {(categories || [])
+              .filter((category) => category.type === form.type && category.is_active)
               .map((category) => (
                 <option key={category.id} value={category.id}>{category.name}</option>
               ))}

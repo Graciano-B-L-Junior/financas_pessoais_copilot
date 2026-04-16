@@ -11,20 +11,20 @@ const fetcher = (url) => api.get(url).then((r) => r.data)
 const EMPTY = { name: '', type: 'EXPENSE', color: '#8baef7', icon: '', is_active: true }
 
 const ICON_OPTIONS = [
-  { value: '', label: 'Sem icone', symbol: '○' },
-  { value: 'wallet', label: 'Carteira', symbol: '◔' },
-  { value: 'home', label: 'Casa', symbol: '⌂' },
-  { value: 'food', label: 'Alimentacao', symbol: '◒' },
-  { value: 'transport', label: 'Transporte', symbol: '⇄' },
-  { value: 'health', label: 'Saude', symbol: '✚' },
-  { value: 'shopping', label: 'Compras', symbol: '▣' },
-  { value: 'salary', label: 'Salario', symbol: '↑' },
-  { value: 'investment', label: 'Investimento', symbol: '◌' },
-  { value: 'education', label: 'Educacao', symbol: '⌘' },
+  { value: '', label: 'Sem icone', symbol: '⚪' },
+  { value: 'wallet', label: 'Carteira', symbol: '👛' },
+  { value: 'home', label: 'Casa', symbol: '🏠' },
+  { value: 'food', label: 'Alimentacao', symbol: '🍽️' },
+  { value: 'transport', label: 'Transporte', symbol: '🚌' },
+  { value: 'health', label: 'Saude', symbol: '💊' },
+  { value: 'shopping', label: 'Compras', symbol: '🛍️' },
+  { value: 'salary', label: 'Salario', symbol: '💰' },
+  { value: 'investment', label: 'Investimento', symbol: '📈' },
+  { value: 'education', label: 'Educacao', symbol: '📚' },
 ]
 
 function getIconSymbol(iconValue) {
-  return ICON_OPTIONS.find((option) => option.value === iconValue)?.symbol || '○'
+  return ICON_OPTIONS.find((option) => option.value === iconValue)?.symbol || '⚪'
 }
 
 export default function CategoriesPage() {
