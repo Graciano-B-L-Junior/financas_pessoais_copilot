@@ -1,0 +1,29 @@
+# Ignorar arquivos de ambiente
+backend/.env
+frontend/.env.local
+backend/venv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/coverage/
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
