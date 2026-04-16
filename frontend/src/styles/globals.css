@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-page: #dce9ff;
+  --bg-page-soft: #eef5ff;
+  --surface-main: rgba(252, 254, 255, 0.88);
+  --surface-muted: #edf4ff;
+  --surface-accent: #dcecf0;
+  --surface-accent-strong: #cadeff;
+  --border-soft: rgba(112, 147, 197, 0.18);
+  --border-strong: rgba(86, 120, 168, 0.28);
+  --text-primary: #162033;
+  --text-secondary: #60708b;
+  --text-tertiary: #8d9ab1;
+  --accent-primary: #8baef7;
+  --accent-primary-strong: #7097f0;
+  --accent-mint: #99d5c6;
+  --accent-mint-strong: #6ebaa6;
+  --accent-coral: #ef8f96;
+  --accent-gold: #f2c879;
+  --success: #4a9c88;
+  --danger: #cf6d78;
+  --shadow-soft: 0 30px 60px rgba(109, 136, 184, 0.16);
+  --shadow-card: 0 18px 40px rgba(134, 158, 198, 0.12);
+  --radius-panel: 34px;
+  --radius-card: 28px;
+  --radius-pill: 999px;
+  --container-width: 1280px;
+}
+
+html,
+body,
+#__next {
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 34%),
+    radial-gradient(circle at right 10%, rgba(167, 215, 205, 0.34), transparent 24%),
+    linear-gradient(180deg, var(--bg-page) 0%, var(--bg-page-soft) 100%);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 96px 96px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.42), transparent 72%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: rgba(139, 174, 247, 0.35);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(112, 151, 240, 0.38);
+  outline-offset: 2px;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

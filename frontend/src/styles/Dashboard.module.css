@@ -1,0 +1,254 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.88fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.heroCopy,
+.filterCard,
+.card,
+.loadingCard {
+  border-radius: var(--radius-panel);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(252, 254, 255, 0.78);
+  box-shadow: var(--shadow-card);
+}
+
+.heroCopy {
+  padding: 1.75rem;
+}
+
+.eyebrow,
+.cardLabel {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 32px;
+  align-items: center;
+  padding: 0 0.8rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  background: rgba(139, 174, 247, 0.16);
+  color: var(--accent-primary-strong);
+  margin-bottom: 0.8rem;
+}
+
+.heroCopy h1 {
+  max-width: 14ch;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  margin-bottom: 0.8rem;
+}
+
+.heroCopy p,
+.summaryCard p,
+.emptyCopy,
+.transactionItem span,
+.noteList li {
+  color: var(--text-secondary);
+}
+
+.filterCard {
+  padding: 1.3rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.filterCard label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filterCard label span {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.filterCard input,
+.filterCard select {
+  min-height: 48px;
+  padding: 0 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.loadingCard {
+  padding: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  padding: 1.5rem;
+}
+
+.balanceCard {
+  grid-column: span 5;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9) 0%, rgba(229, 240, 255, 0.82) 100%);
+}
+
+.balanceValue {
+  display: block;
+  margin: 1rem 0 1.1rem;
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.actionChip {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.summaryCard {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(202, 222, 255, 0.82) 0%, rgba(235, 243, 255, 0.92) 100%);
+}
+
+.summaryCard strong,
+.sectionHead h2,
+.noteCard h2 {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-top: 0.8rem;
+}
+
+.listCard {
+  grid-column: span 4;
+}
+
+.chartCard {
+  grid-column: span 8;
+}
+
+.noteCard {
+  grid-column: span 4;
+  background: linear-gradient(180deg, rgba(217, 236, 228, 0.9) 0%, rgba(242, 248, 245, 0.88) 100%);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cardLabel {
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--text-secondary);
+}
+
+.transactionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.transactionItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid rgba(96, 112, 139, 0.12);
+}
+
+.transactionItem:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.transactionItem strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.transactionIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+.positive {
+  color: var(--success);
+}
+
+.negative {
+  color: var(--danger);
+}
+
+.noteList {
+  margin-top: 1rem;
+  padding-left: 1.1rem;
+}
+
+.noteList li + li {
+  margin-top: 0.8rem;
+}
+
+@media (max-width: 1080px) {
+  .hero,
+  .filterCard {
+    grid-template-columns: 1fr;
+  }
+
+  .balanceCard,
+  .summaryCard,
+  .listCard,
+  .chartCard,
+  .noteCard {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 720px) {
+  .heroCopy,
+  .filterCard,
+  .card {
+    padding: 1.2rem;
+    border-radius: 28px;
+  }
+
+  .transactionItem {
+    grid-template-columns: 1fr;
+  }
+}

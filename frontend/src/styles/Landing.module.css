@@ -1,0 +1,334 @@
+.container {
+  width: min(100%, var(--container-width));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 0 1.5rem;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.logoMark {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-mint) 0%, var(--accent-primary) 100%);
+  color: white;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.btnPrimary,
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.2rem;
+  border-radius: var(--radius-pill);
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-strong) 100%);
+  color: white !important;
+  box-shadow: 0 16px 32px rgba(112, 151, 240, 0.22);
+}
+
+.btnSecondary {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border-soft);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.88fr);
+  gap: 1.5rem;
+  padding: 1rem 0 2rem;
+}
+
+.copy,
+.previewPanel,
+.featureCard {
+  border-radius: var(--radius-panel);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(252, 254, 255, 0.78);
+  box-shadow: var(--shadow-card);
+}
+
+.copy {
+  padding: 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 34px;
+  padding: 0 0.9rem;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: rgba(153, 213, 198, 0.2);
+  color: var(--success);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.copy h1 {
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  max-width: 10ch;
+}
+
+.copy p {
+  max-width: 52ch;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: auto;
+}
+
+.metrics div {
+  padding: 1rem;
+  border-radius: 22px;
+  background: var(--surface-muted);
+}
+
+.metrics strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 1.05rem;
+}
+
+.metrics span {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.previewPanel {
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: linear-gradient(180deg, rgba(247, 251, 255, 0.92) 0%, rgba(226, 238, 251, 0.9) 100%);
+}
+
+.balanceCard {
+  padding: 1.5rem;
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.balanceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.badge {
+  min-height: 32px;
+  padding: 0 0.8rem;
+  border-radius: var(--radius-pill);
+  background: rgba(153, 213, 198, 0.18);
+  color: var(--success);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.balanceCard strong {
+  display: block;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  margin: 0.65rem 0 0.8rem;
+}
+
+.balanceCard p {
+  color: var(--text-secondary);
+}
+
+.transactionPanel {
+  padding: 1.3rem;
+  border-radius: var(--radius-card);
+}
+
+.transactionPanel {
+  background: #d9ece4;
+}
+
+.transactionHeader,
+.transactionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.transactionHeader h2 {
+  font-size: 1.1rem;
+  line-height: 1.1;
+}
+
+.transactionHeader span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.transactionPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.transactionRow {
+  align-items: flex-start;
+}
+
+.transactionAvatar {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(22, 32, 51, 0.16);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.transactionRow strong {
+  display: block;
+  margin-bottom: 0.12rem;
+  font-size: 0.92rem;
+}
+
+.transactionRow div span {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.transactionRow b {
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0 0 1rem;
+}
+
+.featureCard {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.featureIcon {
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+.featureCard h2 {
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+.featureCard p {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1080px) {
+  .hero,
+  .features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding: 14px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .copy,
+  .previewPanel,
+  .featureCard,
+  .balanceCard,
+  .transactionPanel {
+    padding: 1.25rem;
+  }
+
+  .copy h1 {
+    font-size: 2.55rem;
+    max-width: 12ch;
+  }
+
+  .metrics,
+  .features {
+    grid-template-columns: 1fr;
+  }
+}
