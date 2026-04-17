@@ -3,6 +3,7 @@ name: especialista-front-end
 description: Agente especialista em desenvolvimento front-end — performance, acessibilidade, arquitetura de UI e qualidade da experiência do usuário.
 argument-hint: "Uma tarefa, pergunta ou diretiva. Ex.: 'Reveja ./webapp para performance, a11y e bundle size'."
 # tools: ['vscode', 'read', 'edit', 'search', 'todo', 'execute']
+user-invocable: false
 ---
 
 <!--

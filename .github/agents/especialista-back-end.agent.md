@@ -3,6 +3,7 @@ name: especialista-back-end
 description: Agente especialista em back-end — arquitetura, dados, escalabilidade, segurança e operações.
 argument-hint: "Uma tarefa, pergunta ou diretiva. Ex.: 'Analise ./api para performance, schema de DB e migrações.'"
 # tools: ['vscode', 'read', 'edit', 'search', 'todo', 'execute']
+user-invocable: false
 ---
 
 <!--
