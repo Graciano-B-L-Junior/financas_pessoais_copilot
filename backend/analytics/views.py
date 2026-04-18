@@ -84,8 +84,9 @@ class BehaviorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        days = min(int(request.query_params.get('days', 90)), 730)
         end = date.today()
-        start = end - timedelta(days=90)
+        start = end - timedelta(days=days)
         qs = Transaction.objects.filter(user=request.user, date__range=(start, end))
 
         income_qs = qs.filter(amount__gt=0)
@@ -95,7 +96,8 @@ class BehaviorView(APIView):
         total_expense_raw = expense_qs.aggregate(s=Sum('amount'))['s'] or Decimal('0')
         total_expense = abs(total_expense_raw)
         balance = total_income - total_expense
-        avg_monthly_expense = round(total_expense / 3, 2)
+        months = max(Decimal(days) / Decimal('30'), Decimal('1'))
+        avg_monthly_expense = round(total_expense / months, 2)
 
         top_expense_categories = list(
             expense_qs.values('category__name')
@@ -115,7 +117,7 @@ class BehaviorView(APIView):
             item['total'] = float(item.get('total') or 0)
 
         return Response({
-            'period_days': 90,
+            'period_days': days,
             'total_income': total_income,
             'total_expense': total_expense,
             'balance': balance,

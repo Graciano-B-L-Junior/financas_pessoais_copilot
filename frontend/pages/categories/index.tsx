@@ -1,68 +1,65 @@
 import { useState } from 'react'
 import useSWR, { mutate as globalMutate } from 'swr'
 import Layout from '../../components/Layout'
+import Pagination from '../../components/Pagination'
 import { apiFetch } from '../../lib/api'
 
-const KEY = '/api/v1/categories/'
+const PAGE_SIZE = 10
 const fetcher = (url: string) => apiFetch(url).then((r) => r.json())
 
 interface Category { id: number; name: string }
+interface PagedResp { count: number; results: Category[] }
 
 export default function Categories() {
-  const { data, isLoading } = useSWR<{ results: Category[] }>(KEY, fetcher)
+  const [page, setPage] = useState(1)
+  const key = `/api/v1/categories/?page=${page}&page_size=${PAGE_SIZE}`
+  const { data, isLoading } = useSWR<PagedResp>(key, fetcher)
+
+  const categories = data?.results ?? []
+  const totalPages = data ? Math.ceil(data.count / PAGE_SIZE) : 1
+
   const [name, setName] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
   const [error, setError] = useState('')
 
-  const categories: Category[] = data?.results ?? (Array.isArray(data) ? data as unknown as Category[] : [])
-
   async function add(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const res = await apiFetch(KEY, { method: 'POST', body: JSON.stringify({ name }) })
-    if (res.ok) {
-      setName('')
-      globalMutate(KEY)
-    } else {
-      const d = await res.json()
-      setError(d.name?.[0] || 'Erro ao criar categoria.')
-    }
+    const res = await apiFetch('/api/v1/categories/', { method: 'POST', body: JSON.stringify({ name }) })
+    if (res.ok) { setName(''); globalMutate(key) }
+    else { const d = await res.json(); setError(d.name?.[0] || 'Erro ao criar.') }
   }
 
   async function save(id: number) {
-    const res = await apiFetch(`${KEY}${id}/`, { method: 'PATCH', body: JSON.stringify({ name: editName }) })
-    if (res.ok) { setEditId(null); globalMutate(KEY) }
+    const res = await apiFetch(`/api/v1/categories/${id}/`, { method: 'PATCH', body: JSON.stringify({ name: editName }) })
+    if (res.ok) { setEditId(null); globalMutate(key) }
   }
 
   async function remove(id: number) {
     if (!confirm('Excluir categoria?')) return
-    await apiFetch(`${KEY}${id}/`, { method: 'DELETE' })
-    globalMutate(KEY)
+    await apiFetch(`/api/v1/categories/${id}/`, { method: 'DELETE' })
+    globalMutate(key)
   }
 
   return (
     <Layout title="Categorias">
-      <div className="table-card" style={{ marginBottom: 24 }}>
-        <h2 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600 }}>Nova Categoria</h2>
-        <form onSubmit={add} style={{ display: 'flex', gap: 8 }}>
-          <input
-            placeholder="Nome da categoria"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ flex: 1 }}
-          />
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <span className="card-title">Nova Categoria</span>
+        </div>
+        <form onSubmit={add} className="form-inline">
+          <div className="form-group" style={{ flex: 1 }}>
+            <input placeholder="Nome da categoria" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
           <button type="submit" className="btn btn-primary">Adicionar</button>
         </form>
-        {error && <p style={{ color: '#EF4444', marginTop: 8, fontSize: 13 }}>{error}</p>}
+        {error && <div className="auth-error" style={{ marginTop: 8 }}>{error}</div>}
       </div>
 
-      <div className="table-card">
-        {isLoading && <p>Carregando...</p>}
-        {!isLoading && categories.length === 0 && (
-          <p style={{ color: '#6B7280', fontSize: 14 }}>Nenhuma categoria cadastrada.</p>
-        )}
+      <div className="card">
+        {isLoading && <p style={{ color: '#6B7280', padding: 16 }}>Carregando...</p>}
+        {!isLoading && categories.length === 0 && <div className="empty-state">Nenhuma categoria cadastrada.</div>}
         {categories.length > 0 && (
           <table>
             <thead>
@@ -74,20 +71,18 @@ export default function Categories() {
                   <td>
                     {editId === cat.id ? (
                       <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%' }} />
-                    ) : (
-                      cat.name
-                    )}
+                    ) : cat.name}
                   </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {editId === cat.id ? (
                       <>
-                        <button className="btn btn-primary" style={{ marginRight: 8 }} onClick={() => save(cat.id)}>Salvar</button>
-                        <button className="btn btn-secondary" onClick={() => setEditId(null)}>Cancelar</button>
+                        <button className="btn btn-primary btn-sm" style={{ marginRight: 8 }} onClick={() => save(cat.id)}>Salvar</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancelar</button>
                       </>
                     ) : (
                       <>
-                        <button className="btn btn-secondary" style={{ marginRight: 8 }} onClick={() => { setEditId(cat.id); setEditName(cat.name) }}>Editar</button>
-                        <button className="btn btn-danger" onClick={() => remove(cat.id)}>Excluir</button>
+                        <button className="btn btn-secondary btn-sm" style={{ marginRight: 8 }} onClick={() => { setEditId(cat.id); setEditName(cat.name) }}>Editar</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => remove(cat.id)}>Excluir</button>
                       </>
                     )}
                   </td>
@@ -96,6 +91,7 @@ export default function Categories() {
             </tbody>
           </table>
         )}
+        <Pagination page={page} totalPages={totalPages} onPage={setPage} />
       </div>
     </Layout>
   )

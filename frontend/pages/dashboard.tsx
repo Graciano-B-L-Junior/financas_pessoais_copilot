@@ -1,107 +1,153 @@
 import { useState } from 'react'
 import useSWR from 'swr'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  PieChart, Pie, Cell, ResponsiveContainer,
+} from 'recharts'
 import Layout from '../components/Layout'
-import { apiFetch, formatBRL, formatDate } from '../lib/api'
+import { apiFetch, formatBRL } from '../lib/api'
 
 const fetcher = (url: string) => apiFetch(url).then((r) => r.json())
 
-interface CategoryTotal { category__name: string; total: number }
-interface MonthlyTrend { month: string; income: number; expense: number }
-interface DashboardData {
-  start_date: string
-  end_date: string
-  totals: { income: number; expense: number; balance: number }
-  by_category: CategoryTotal[]
-  monthly_trend: MonthlyTrend[]
-}
+const COLORS = ['#1A3C2B', '#2E6B4A', '#4CAF7A', '#D1FAE5', '#6B7280', '#F97316', '#EAB308', '#EF4444']
 
 function today() { return new Date().toISOString().slice(0, 10) }
 function monthStart() {
   const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+}
+
+interface DashboardData {
+  totals: { income: number; expense: number; balance: number }
+  by_category: { category__name: string; total: number }[]
+  monthly_trend: { month: string; income: number; expense: number }[]
 }
 
 export default function Dashboard() {
   const [start, setStart] = useState(monthStart())
   const [end, setEnd] = useState(today())
-  const { data, error, isLoading } = useSWR<DashboardData>(
+  const { data, isLoading } = useSWR<DashboardData>(
     `/api/v1/dashboard/?start_date=${start}&end_date=${end}`,
     fetcher
   )
 
+  const pieData = (data?.by_category || [])
+    .filter((c) => c.total !== 0)
+    .map((c) => ({ name: c.category__name || 'Sem categoria', value: Math.abs(c.total) }))
+
+  const barData = (data?.monthly_trend || []).map((m) => ({
+    month: m.month.slice(0, 7),
+    Receitas: m.income,
+    Despesas: m.expense,
+  }))
+
   return (
     <Layout title="Dashboard">
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div className="form-group" style={{ marginBottom: 0 }}>
+      <div className="form-inline" style={{ marginBottom: 24 }}>
+        <div className="form-group">
           <label>De</label>
           <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
         </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
+        <div className="form-group">
           <label>Até</label>
           <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
         </div>
       </div>
 
-      {isLoading && <p>Carregando...</p>}
-      {error && <p style={{ color: '#EF4444' }}>Erro ao carregar dados.</p>}
+      {isLoading && <p style={{ color: '#6B7280' }}>Carregando...</p>}
+
       {data && (
         <>
+          {/* Stat cards */}
           <div className="stats-grid">
+            <div className="stat-card hero">
+              <span className="stat-label">Saldo do Período</span>
+              <span className="stat-value">{formatBRL(data.totals.balance)}</span>
+              <span className={`stat-trend ${data.totals.balance >= 0 ? 'up' : 'down'}`}>
+                {data.totals.balance >= 0 ? '↑ Positivo' : '↓ Negativo'}
+              </span>
+            </div>
             <div className="stat-card">
               <span className="stat-label">Receitas</span>
-              <span className="stat-value" style={{ color: '#16A34A' }}>{formatBRL(data.totals.income)}</span>
+              <span className="stat-value" style={{ color: '#22C55E' }}>{formatBRL(data.totals.income)}</span>
             </div>
             <div className="stat-card">
               <span className="stat-label">Despesas</span>
-              <span className="stat-value" style={{ color: '#DC2626' }}>{formatBRL(data.totals.expense)}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Saldo</span>
-              <span className="stat-value" style={{ color: data.totals.balance >= 0 ? '#16A34A' : '#DC2626' }}>
-                {formatBRL(data.totals.balance)}
-              </span>
+              <span className="stat-value" style={{ color: '#EF4444' }}>{formatBRL(data.totals.expense)}</span>
             </div>
           </div>
 
-          {data.by_category.length > 0 && (
-            <div className="table-card" style={{ marginTop: 32 }}>
-              <h2 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>Por Categoria</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Categoria</th>
-                    <th style={{ textAlign: 'right' }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.by_category.map((item, i) => (
-                    <tr key={i}>
-                      <td>{item.category__name || 'Sem categoria'}</td>
-                      <td style={{ textAlign: 'right' }}>{formatBRL(item.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Charts grid */}
+          <div className="grid-2">
+            {/* Bar chart — monthly trend */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title">Tendência Mensal</span>
+              </div>
+              <div className="chart-container">
+                {barData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={barData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6B7280' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={(v) => `R$${v}`} />
+                      <Tooltip formatter={(v: number) => formatBRL(v)} />
+                      <Legend />
+                      <Bar dataKey="Receitas" fill="#1A3C2B" radius={[4,4,0,0]} />
+                      <Bar dataKey="Despesas" fill="#4CAF7A" radius={[4,4,0,0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="empty-state">Sem dados no período</div>
+                )}
+              </div>
             </div>
-          )}
 
-          {data.monthly_trend.length > 0 && (
-            <div className="table-card" style={{ marginTop: 24 }}>
-              <h2 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>Tendência Mensal</h2>
+            {/* Pie chart — by category */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title">Por Categoria</span>
+              </div>
+              <div className="chart-container">
+                {pieData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%" cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {pieData.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="empty-state">Sem dados no período</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Category table */}
+          {(data.by_category || []).length > 0 && (
+            <div className="card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <span className="card-title">Detalhamento por Categoria</span>
+              </div>
               <table>
                 <thead>
-                  <tr>
-                    <th>Mês</th>
-                    <th style={{ textAlign: 'right' }}>Receitas</th>
-                    <th style={{ textAlign: 'right' }}>Despesas</th>
-                  </tr>
+                  <tr><th>Categoria</th><th style={{ textAlign: 'right' }}>Total</th></tr>
                 </thead>
                 <tbody>
-                  {data.monthly_trend.map((item, i) => (
+                  {data.by_category.map((c, i) => (
                     <tr key={i}>
-                      <td>{formatDate(item.month)}</td>
-                      <td style={{ textAlign: 'right', color: '#16A34A' }}>{formatBRL(item.income)}</td>
-                      <td style={{ textAlign: 'right', color: '#DC2626' }}>{formatBRL(item.expense)}</td>
+                      <td>{c.category__name || 'Sem categoria'}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatBRL(c.total)}</td>
                     </tr>
                   ))}
                 </tbody>

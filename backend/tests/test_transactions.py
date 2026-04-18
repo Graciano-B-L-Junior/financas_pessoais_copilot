@@ -22,7 +22,7 @@ def test_register_creates_user():
     client = APIClient()
     res = client.post(
         '/api/v1/auth/register/',
-        {'username': 'testuser', 'password': 'TestPass123!'},
+        {'username': 'testuser', 'email': 'testuser@example.com', 'password': 'TestPass123!'},
         format='json',
     )
     assert res.status_code == 201
@@ -31,11 +31,11 @@ def test_register_creates_user():
 
 @pytest.mark.django_db
 def test_login_sets_cookies():
-    User.objects.create_user(username='cookieuser', password='cookiePass123')
+    User.objects.create_user(username='cookieuser', email='cookieuser@example.com', password='cookiePass123')
     client = APIClient()
     res = client.post(
         '/api/v1/auth/login/',
-        {'username': 'cookieuser', 'password': 'cookiePass123'},
+        {'email': 'cookieuser@example.com', 'password': 'cookiePass123'},
         format='json',
     )
     assert res.status_code == 200

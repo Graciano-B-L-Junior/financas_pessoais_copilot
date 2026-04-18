@@ -2,60 +2,85 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { apiFetch } from '../lib/api'
 
-const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/transactions', label: 'Lançamentos', icon: '💸' },
-  { href: '/categories', label: 'Categorias', icon: '🏷️' },
-  { href: '/recurring', label: 'Recorrentes', icon: '🔁' },
-  { href: '/reports', label: 'Relatórios', icon: '📈' },
-  { href: '/profile', label: 'Perfil', icon: '👤' },
+const MENU_ITEMS = [
+  { href: '/dashboard',    label: 'Dashboard',    icon: '📊' },
+  { href: '/transactions', label: 'Lançamentos',  icon: '💰' },
+  { href: '/categories',   label: 'Categorias',   icon: '📁' },
+  { href: '/recurring',    label: 'Recorrentes',  icon: '🔄' },
+]
+const GENERAL_ITEMS = [
+  { href: '/reports',  label: 'Análise',  icon: '📈' },
+  { href: '/profile',  label: 'Perfil',   icon: '👤' },
 ]
 
-interface LayoutProps {
+interface Props {
+  title: string
   children: React.ReactNode
-  title?: string
 }
 
-export default function Layout({ children, title = 'Finanças Pessoais' }: LayoutProps) {
+export default function Layout({ title, children }: Props) {
   const router = useRouter()
 
-  async function handleLogout() {
+  async function logout() {
     await apiFetch('/api/v1/auth/logout/', { method: 'POST' })
     router.push('/login')
   }
+
+  const isActive = (href: string) =>
+    router.pathname === href || router.pathname.startsWith(href + '/')
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">F</div>
-          <span className="sidebar-logo-name">Finanças</span>
+          <span className="sidebar-logo-text">Finanças</span>
         </div>
+
         <nav className="sidebar-nav">
-          <span className="sidebar-section-label">Menu</span>
-          {NAV.map((item) => (
+          <div className="sidebar-section-label">MENU</div>
+          {MENU_ITEMS.map((item) => (
             <Link
-              href={item.href}
               key={item.href}
-              className={`sidebar-link${router.pathname === item.href ? ' active' : ''}`}
+              href={item.href}
+              className={`sidebar-link${isActive(item.href) ? ' active' : ''}`}
             >
-              <span className="icon">{item.icon}</span>
-              {item.label}
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+
+          <div className="sidebar-section-label">GERAL</div>
+          {GENERAL_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`sidebar-link${isActive(item.href) ? ' active' : ''}`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="sidebar-bottom">
-          <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleLogout}>
-            Sair
+
+        <div className="sidebar-footer">
+          <button onClick={logout} className="sidebar-link" style={{ width: '100%', border: 'none', background: 'none' }}>
+            <span>🚪</span>
+            <span>Sair</span>
           </button>
         </div>
       </aside>
 
-      <div style={{ flex: 1 }}>
+      <div className="main-area">
         <header className="topbar">
-          <span className="topbar-title">{title}</span>
+          <h1 className="topbar-title">{title}</h1>
+          <div className="topbar-right">
+            <div className="topbar-avatar">U</div>
+          </div>
         </header>
-        <main className="page-content">{children}</main>
+        <main className="page-content">
+          {children}
+        </main>
       </div>
     </div>
   )
