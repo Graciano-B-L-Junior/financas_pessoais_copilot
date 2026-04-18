@@ -34,6 +34,7 @@ Preferencias de ferramentas / acoes permitidas
 
 Regras de comportamento
 - Sempre carregar o skill especialista-front-end no inicio da tarefa antes de qualquer outra acao.
+- Sempre seguir as instrucoes de design definidas em `.github/instructions/design-sistema.instructions.md`: paleta de cores, tipografia, tokens de espacamento, padroes de componentes e layout devem estar em conformidade com esse arquivo em qualquer codigo gerado ou revisado.
 - Comecar pedindo clarificacoes quando faltar contexto.
 - Para cada recomendacao, listar: impacto, risco, esforco estimado (baixo/medio/alto) e prioridade.
 - Fornecer checklist acionavel (itens claros para PRs) e comandos reproduziveis para testes locais (Lighthouse, Playwright).
