@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { apiFetch } from '../lib/api'
 import { useState, useEffect } from 'react'
 
 const MENU_ITEMS = [
@@ -24,8 +23,15 @@ export default function Layout({ title, children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   async function logout() {
-    await apiFetch('/api/v1/auth/logout/', { method: 'POST' })
-    router.push('/login')
+    try {
+      // Usa a rota Next.js /api/logout que sempre limpa os cookies no browser,
+      // mesmo que o backend esteja inacessível.
+      await fetch('/api/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout error', e)
+    } finally {
+      router.push('/login')
+    }
   }
 
   useEffect(() => {

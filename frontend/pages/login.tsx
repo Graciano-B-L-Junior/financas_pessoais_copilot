@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { apiFetch } from '../lib/api'
@@ -9,6 +9,13 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    if (router.query?.created) {
+      setSuccess('Conta criada com sucesso. Faça login.')
+    }
+  }, [router.query])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,9 +29,17 @@ export default function Login() {
       if (res.ok) {
         router.push('/dashboard')
       } else {
-        const data = await res.json()
-        setError(data.detail || 'Erro ao fazer login.')
+        let errMsg = 'Erro ao fazer login.'
+        try {
+          const data = await res.json()
+          errMsg = data?.detail ?? JSON.stringify(data) ?? errMsg
+        } catch (parseErr) {
+          errMsg = `${res.status} ${res.statusText}`
+        }
+        setError(errMsg)
       }
+    } catch (e: any) {
+      setError('Erro de conexão: ' + (e?.message || String(e)))
     } finally {
       setLoading(false)
     }
@@ -38,6 +53,7 @@ export default function Login() {
         </div>
         <h1>Entrar</h1>
 
+        {success && <div className="auth-success">{success}</div>}
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={submit}>

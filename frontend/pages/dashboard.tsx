@@ -31,6 +31,9 @@ export default function Dashboard() {
     fetcher
   )
 
+  // Protege acessos quando API não retornar `totals`
+  const totals = data?.totals ?? { income: 0, expense: 0, balance: 0 }
+
   const pieData = (data?.by_category || [])
     .filter((c) => c.total !== 0)
     .map((c) => ({ name: c.category__name || 'Sem categoria', value: Math.abs(c.total) }))
@@ -61,20 +64,20 @@ export default function Dashboard() {
           {/* Stat cards */}
           <div className="stats-grid">
             <div className="stat-card hero">
-              <span className="stat-label">Saldo do Período</span>
-              <span className="stat-value">{formatBRL(data.totals.balance)}</span>
-              <span className={`stat-trend ${data.totals.balance >= 0 ? 'up' : 'down'}`}>
-                {data.totals.balance >= 0 ? '↑ Positivo' : '↓ Negativo'}
-              </span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Receitas</span>
-              <span className="stat-value" style={{ color: '#22C55E' }}>{formatBRL(data.totals.income)}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Despesas</span>
-              <span className="stat-value" style={{ color: '#EF4444' }}>{formatBRL(data.totals.expense)}</span>
-            </div>
+                <span className="stat-label">Saldo do Período</span>
+                <span className="stat-value">{formatBRL(totals.balance)}</span>
+                <span className={`stat-trend ${totals.balance >= 0 ? 'up' : 'down'}`}>
+                  {totals.balance >= 0 ? '↑ Positivo' : '↓ Negativo'}
+                </span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Receitas</span>
+                <span className="stat-value" style={{ color: '#22C55E' }}>{formatBRL(totals.income)}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Despesas</span>
+                <span className="stat-value" style={{ color: '#EF4444' }}>{formatBRL(totals.expense)}</span>
+              </div>
           </div>
 
           {/* Charts grid */}

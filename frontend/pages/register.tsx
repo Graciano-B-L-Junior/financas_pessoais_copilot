@@ -21,11 +21,23 @@ export default function Register() {
         body: JSON.stringify({ username, email, password }),
       })
       if (res.ok) {
-        router.push('/dashboard')
+        // Redirect to login after successful registration to avoid
+        // relying on automatic cookie-auth in environments where
+        // cross-site cookies or samesite policies prevent them from
+        // being set immediately.
+        router.push('/login?created=1')
       } else {
-        const data = await res.json()
-        setError(data.detail || 'Erro ao criar conta.')
+        let errMsg = 'Erro ao criar conta.'
+        try {
+          const data = await res.json()
+          errMsg = data?.detail ?? JSON.stringify(data) ?? errMsg
+        } catch (parseErr) {
+          errMsg = `${res.status} ${res.statusText}`
+        }
+        setError(errMsg)
       }
+    } catch (e: any) {
+      setError('Erro de conexão: ' + (e?.message || String(e)))
     } finally {
       setLoading(false)
     }

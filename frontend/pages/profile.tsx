@@ -42,8 +42,13 @@ export default function Profile() {
   }
 
   async function doLogout() {
-    await apiFetch('/api/v1/auth/logout/', { method: 'POST' })
-    router.push('/login')
+    try {
+      await fetch('/api/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout error', e)
+    } finally {
+      router.push('/login')
+    }
   }
 
   if (isLoading) return <Layout title="Perfil"><p style={{ color: '#6B7280' }}>Carregando...</p></Layout>

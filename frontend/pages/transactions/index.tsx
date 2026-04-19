@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import useSWR, { mutate as globalMutate } from 'swr'
 import Layout from '../../components/Layout'
 import Pagination from '../../components/Pagination'
-import { apiFetch, formatBRL, formatDate } from '../../lib/api'
+import { apiFetch, apiFetchBlob, formatBRL, formatDate } from '../../lib/api'
 
 const PAGE_SIZE = 15
 const fetcher = (url: string) => apiFetch(url).then(r => r.json())
@@ -32,6 +32,61 @@ export default function Transactions() {
   const [form, setForm] = useState({ amount: '', description: '', date: '', category: '' })
   const [error, setError] = useState('')
 
+  // ── Import modal state ───────────────────────────────────────────────────
+  const [showImport, setShowImport] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<{ message: string; errors: string[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function downloadTemplate() {
+    const year = new Date().getFullYear()
+    try {
+      const blob = await apiFetchBlob(`/api/v1/transactions/template/?year=${year}`)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `template_gastos_${year}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Erro ao baixar o template.')
+    }
+  }
+
+  async function submitImport(e: React.FormEvent) {
+    e.preventDefault()
+    if (!importFile) return
+    setImportLoading(true)
+    setImportResult(null)
+    const body = new FormData()
+    body.append('file', importFile)
+    try {
+      const res = await apiFetch('/api/v1/transactions/import/', {
+        method: 'POST',
+        body,
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setImportResult({ message: data.message, errors: data.errors ?? [] })
+        globalMutate(url)
+      } else {
+        setImportResult({ message: data.detail || 'Erro ao importar.', errors: [] })
+      }
+    } catch {
+      setImportResult({ message: 'Erro de conexão com o servidor.', errors: [] })
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  function closeImport() {
+    setShowImport(false)
+    setImportFile(null)
+    setImportResult(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   function field(f: Partial<typeof form>) { setForm(prev => ({ ...prev, ...f })) }
 
   function openNew() { setEditId(null); setForm({ amount: '', description: '', date: new Date().toISOString().slice(0, 10), category: '' }); setShowForm(true); setError('') }
@@ -57,11 +112,80 @@ export default function Transactions() {
 
   return (
     <Layout title="Lançamentos">
+      {/* ── Modal de importação ─────────────────────────────────────────── */}
+      {showImport && (
+        <div style={overlayStyle}>
+          <div style={modalStyle}>
+            <div className="card-header" style={{ borderBottom: '1px solid var(--color-neutral-200)', paddingBottom: 12 }}>
+              <span className="card-title">Importar Planilha</span>
+              <button className="btn btn-secondary btn-sm" onClick={closeImport}>✕</button>
+            </div>
+            <div style={{ padding: '16px 0 8px' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-neutral-500)', marginBottom: 12 }}>
+                Faça upload de uma planilha <strong>.xlsx</strong> no formato padrão.<br />
+                Baixe o{' '}
+                <button
+                  onClick={downloadTemplate}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-primary-700)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit' }}
+                >
+                  template modelo
+                </button>{' '}
+                para ver a estrutura esperada.
+              </p>
+              <form onSubmit={submitImport}>
+                <div className="form-group" style={{ marginBottom: 12 }}>
+                  <label>Arquivo .xlsx</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xlsm"
+                    onChange={e => setImportFile(e.target.files?.[0] ?? null)}
+                    required
+                    style={{ padding: '6px 0' }}
+                  />
+                </div>
+                {importResult && (
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: 6,
+                    marginBottom: 12,
+                    background: importResult.errors.length ? '#FEF3C7' : '#D1FAE5',
+                    border: `1px solid ${importResult.errors.length ? '#FCD34D' : '#6EE7B7'}`,
+                    fontSize: '0.875rem',
+                  }}>
+                    <p style={{ margin: 0, fontWeight: 600, color: '#111827' }}>{importResult.message}</p>
+                    {importResult.errors.length > 0 && (
+                      <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#92400E' }}>
+                        {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="submit" className="btn btn-primary" disabled={!importFile || importLoading}>
+                    {importLoading ? 'Importando...' : 'Importar'}
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={closeImport}>Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filtros */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
           <span className="card-title">Filtros</span>
-          <button className="btn btn-primary" onClick={openNew}>+ Novo Lançamento</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={downloadTemplate} title="Baixar planilha modelo">
+              ⬇ Template
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+              ↑ Importar Planilha
+            </button>
+            <button className="btn btn-primary" onClick={openNew}>+ Novo Lançamento</button>
+          </div>
         </div>
         <div className="form-inline" style={{ flexWrap: 'wrap' }}>
           <div className="form-group">
@@ -160,4 +284,18 @@ export default function Transactions() {
       </div>
     </Layout>
   )
+}
+
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1000,
+  background: 'rgba(0,0,0,0.4)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+}
+
+const modalStyle: React.CSSProperties = {
+  background: '#fff',
+  borderRadius: 10,
+  padding: '20px 24px',
+  width: '100%', maxWidth: 500,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
 }
