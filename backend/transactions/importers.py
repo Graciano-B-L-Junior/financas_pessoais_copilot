@@ -103,15 +103,16 @@ def _get_merged_value(ws, row_idx: int, col_idx: int):
 
 def _is_category_header_for_group(ws, row_idx: int, group: dict) -> bool:
     """
-    Verifica se a linha possui uma célula mesclada cobrindo (total ou parcial)
-    o grupo de colunas indicado (pelo menos 3 colunas dentro do range do grupo).
+    Verifica se a linha possui uma célula mesclada cobrindo TODAS as colunas
+    do grupo (de group["start"] a group["end"]).
+
+    Linhas de dados têm merge parcial (3 cols para observação);
+    cabeçalhos de categoria têm merge total (5 cols = grupo inteiro).
     """
     for merged in ws.merged_cells.ranges:
         if merged.min_row <= row_idx <= merged.max_row:
-            # A merge deve começar no range do grupo e cobrir >= 3 colunas
-            if (merged.min_col >= group["start"] and
-                    merged.max_col <= group["end"] and
-                    (merged.max_col - merged.min_col + 1) >= 3):
+            if (merged.min_col == group["start"] and
+                    merged.max_col == group["end"]):
                 return True
     return False
 

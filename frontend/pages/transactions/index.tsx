@@ -19,8 +19,8 @@ export default function Transactions() {
 
   let url = `/api/v1/transactions/?page=${page}&page_size=${PAGE_SIZE}&ordering=-date`
   if (filterCat) url += `&category=${filterCat}`
-  if (filterStart) url += `&date_after=${filterStart}`
-  if (filterEnd) url += `&date_before=${filterEnd}`
+  if (filterStart) url += `&start_date=${filterStart}`
+  if (filterEnd) url += `&end_date=${filterEnd}`
 
   const { data, isLoading } = useSWR<PagedTx>(url, fetcher)
   const { data: cats } = useSWR<{ count: number; results: Category[] }>('/api/v1/categories/?page_size=100', fetcher)

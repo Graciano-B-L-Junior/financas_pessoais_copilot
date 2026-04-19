@@ -15,7 +15,7 @@ interface PagedRec { count: number; results: Recurring[] }
 
 export default function RecurringPage() {
   const [page, setPage] = useState(1)
-  const url = `/api/v1/recurring/?page=${page}&page_size=${PAGE_SIZE}`
+  const url = `/api/v1/recurrings/?page=${page}&page_size=${PAGE_SIZE}`
   const { data, isLoading } = useSWR<PagedRec>(url, fetcher)
   const { data: cats } = useSWR<{ count: number; results: Category[] }>('/api/v1/categories/?page_size=100', fetcher)
   const items = data?.results ?? []
@@ -36,20 +36,20 @@ export default function RecurringPage() {
     const body: any = { amount: form.amount, description: form.description, frequency: form.frequency, start_date: form.start_date }
     body.category = form.category ? Number(form.category) : null
     const method = editId ? 'PATCH' : 'POST'
-    const path = editId ? `/api/v1/recurring/${editId}/` : '/api/v1/recurring/'
+    const path = editId ? `/api/v1/recurrings/${editId}/` : '/api/v1/recurrings/'
     const res = await apiFetch(path, { method, body: JSON.stringify(body) })
     if (res.ok) { setShowForm(false); globalMutate(url) }
     else { const d = await res.json(); setError(Object.values(d).flat().join(' ')) }
   }
 
   async function toggle(r: Recurring) {
-    await apiFetch(`/api/v1/recurring/${r.id}/`, { method: 'PATCH', body: JSON.stringify({ active: !r.active }) })
+    await apiFetch(`/api/v1/recurrings/${r.id}/`, { method: 'PATCH', body: JSON.stringify({ active: !r.active }) })
     globalMutate(url)
   }
 
   async function remove(id: number) {
     if (!confirm('Excluir recorrência?')) return
-    await apiFetch(`/api/v1/recurring/${id}/`, { method: 'DELETE' })
+    await apiFetch(`/api/v1/recurrings/${id}/`, { method: 'DELETE' })
     globalMutate(url)
   }
 

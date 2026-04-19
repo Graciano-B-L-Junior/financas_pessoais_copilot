@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 
 
 class LoginView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -32,6 +33,7 @@ class LoginView(APIView):
 
 
 class RefreshView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -65,6 +67,7 @@ class LogoutView(APIView):
 
 
 class RegisterView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):

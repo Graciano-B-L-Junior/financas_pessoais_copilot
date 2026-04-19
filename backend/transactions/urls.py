@@ -14,8 +14,8 @@ router.register(r'transactions', TransactionViewSet, basename='transaction')
 router.register(r'recurrings', RecurringTransactionViewSet, basename='recurring')
 
 urlpatterns = [
-    path('', include(router.urls)),
     path('transactions/import/', ImportTransactionsView.as_view(), name='transactions-import'),
     path('transactions/template/', DownloadTemplateView.as_view(), name='transactions-template'),
+    path('', include(router.urls)),
 ]
 
