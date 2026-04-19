@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { apiFetch } from '../lib/api'
+import { useState, useEffect } from 'react'
 
 const MENU_ITEMS = [
   { href: '/dashboard',    label: 'Dashboard',    icon: '📊' },
@@ -20,18 +21,30 @@ interface Props {
 
 export default function Layout({ title, children }: Props) {
   const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   async function logout() {
     await apiFetch('/api/v1/auth/logout/', { method: 'POST' })
     router.push('/login')
   }
 
+  useEffect(() => {
+    const handleRoute = () => setMobileOpen(false)
+    router.events.on('routeChangeStart', handleRoute)
+    return () => router.events.off('routeChangeStart', handleRoute)
+  }, [router.events])
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   const isActive = (href: string) =>
     router.pathname === href || router.pathname.startsWith(href + '/')
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">F</div>
           <span className="sidebar-logo-text">Finanças</span>
@@ -71,9 +84,14 @@ export default function Layout({ title, children }: Props) {
         </div>
       </aside>
 
+      <div className={`backdrop ${mobileOpen ? 'visible' : ''}`} onClick={() => setMobileOpen(false)} />
+
       <div className="main-area">
         <header className="topbar">
-          <h1 className="topbar-title">{title}</h1>
+          <div className="topbar-left">
+            <button className="sidebar-toggle btn-icon" aria-label="Abrir menu" onClick={() => setMobileOpen(true)}>☰</button>
+            <h1 className="topbar-title">{title}</h1>
+          </div>
           <div className="topbar-right">
             <div className="topbar-avatar">U</div>
           </div>

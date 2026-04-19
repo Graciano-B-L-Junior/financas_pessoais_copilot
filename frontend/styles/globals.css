@@ -41,7 +41,8 @@
 
   /* Sidebar */
   --sidebar-width: 220px;
-  --topbar-height: 64px;
+  /* topbar height matches sidebar logo: vertical padding (var(--space-5) * 2) + icon height (36px) */
+  --topbar-height: calc(var(--space-5) * 2 + 36px);
 }
 
 /* ─── Reset ────────────────────────────────────────────────────────── */
@@ -153,6 +154,17 @@ input, select, textarea { font-family: inherit; }
   color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 600;
 }
+
+/* Topbar left group (hamburger + title) */
+.topbar-left { display: flex; align-items: center; gap: var(--space-3); }
+.sidebar-toggle { display: none; }
+
+/* Backdrop shown when mobile menu is open */
+.backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 90;
+}
+.backdrop.visible { opacity: 1; pointer-events: auto; }
 
 /* ─── Page Content ─────────────────────────────────────────────────── */
 .page-content {
@@ -431,6 +443,16 @@ tr:hover { background: var(--color-neutral-50); }
 /* ─── Grid Helper ──────────────────────────────────────────────────── */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 
+/* Reports page spacing helpers */
+.reports-container > * + * {
+  margin-top: var(--space-5);
+}
+.reports-container .card {
+  /* let the container manage spacing */
+  margin-bottom: 0;
+}
+.reports-container .grid-2 { gap: var(--space-5); }
+
 /* ─── Empty State ──────────────────────────────────────────────────── */
 .empty-state {
   text-align: center; padding: 40px 20px;
@@ -443,6 +465,8 @@ tr:hover { background: var(--color-neutral-50); }
   .sidebar.open { transform: translateX(0); }
   .main-area { margin-left: 0; }
   .grid-2 { grid-template-columns: 1fr; }
+  .sidebar-toggle { display: inline-flex; }
+  .sidebar { z-index: 100; }
 }
 @media (max-width: 767px) {
   .landing-hero h1 { font-size: 1.75rem; }

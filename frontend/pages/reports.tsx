@@ -49,7 +49,7 @@ export default function Reports() {
       {isLoading && <p style={{ color: '#6B7280', padding: 16 }}>Carregando...</p>}
 
       {data && (
-        <>
+        <div className="reports-container">
           {/* Stat cards */}
           <div className="stat-grid">
             <div className="stat-card hero">
@@ -105,7 +105,7 @@ export default function Reports() {
           </div>
 
           {/* Top income categories */}
-          <div className="card" style={{ marginTop: 16 }}>
+          <div className="card">
             <div className="card-header"><span className="card-title">Top Receitas por Categoria</span></div>
             {incomePie.length > 0 ? (
               <table>
@@ -123,7 +123,7 @@ export default function Reports() {
               </table>
             ) : <div className="empty-state">Sem dados de receitas.</div>}
           </div>
-        </>
+        </div>
       )}
     </Layout>
   )
