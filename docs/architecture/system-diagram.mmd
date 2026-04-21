@@ -1,0 +1,67 @@
+flowchart TD
+  subgraph Frontend [Frontend - Next.js]
+    Browser["Navegador (Usuário)"]
+    Next["Next.js (SSR / CSR)"]
+    CDN["CDN - Assets estáticos"]
+  end
+
+  subgraph Ingress [Ingress / Proxy]
+    Proxy["Ingress / Nginx / Traefik"]
+  end
+
+  subgraph Backend [Backend - Django + DRF]
+    API["Django + DRF (Gunicorn / Uvicorn)"]
+    Admin["Django Admin"]
+  end
+
+  subgraph Async [Assíncrono - Celery]
+    Beat["Celery Beat (agendador)"]
+    Workers["Celery Workers"]
+  end
+
+  subgraph Data [Persistência & Cache]
+    Postgres["Postgres - banco principal"]
+    Redis["Redis - broker, cache, sessão, rate-limit"]
+  end
+
+  subgraph Auth [Autenticação]
+    JWT["JWT (access / refresh) - cookies HttpOnly"]
+  end
+
+  External["Serviços externos (SMTP / Pagamentos / APIs)"]
+  Jenkins["Jenkins (CI / CD)"]
+  Sentry["Sentry (erros)"]
+  Prom["Prometheus & Grafana (métricas)"]
+
+  Browser -->|Solicita páginas / API| Next
+  Browser -->|Assets estáticos| CDN
+  Next -->|SSR / server-side fetch| Proxy
+  Browser -->|"XHR / fetch (inclui cookies HttpOnly)"| Proxy
+
+  Proxy --> API
+  Proxy --> Next
+
+  API -->|lê / escreve| Postgres
+  API -->|cache read / write| Redis
+  API -->|enfileira tarefas| Redis
+  API -->|"seta cookies (access / refresh)"| Browser
+  API --> Admin
+
+  Redis -->|broker| Workers
+  Beat -->|agenda jobs| Redis
+  Workers -->|"processa tarefas (recorrências, relatórios, e-mails)"| Postgres
+  Workers -->|integra com| External
+
+  API -->|valida tokens| JWT
+  Browser -->|POST /auth/login| API
+  Browser -->|POST /auth/refresh| API
+  API -->|rotaciona refresh| Browser
+
+  Jenkins -->|build & deploy| Proxy
+  API -->|traces / erros| Sentry
+  API -->|metrics| Prom
+  Workers -->|metrics| Prom
+
+  %% Notas: Tokens JWT (access/refresh) armazenados em cookies HttpOnly para reduzir risco XSS.
+  %% Redis atua como broker do Celery e como cache/sessão quando aplicável.
+  %% Celery Beat executa tarefas agendadas (recorrências, geração de relatórios, envio de e-mails).

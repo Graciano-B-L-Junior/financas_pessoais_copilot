@@ -9,7 +9,7 @@ description: "Use quando: auditoria de performance, a11y, arquitetura de UI e CI
 Orientar o agente especialista-front-end a executar analises e recomendacoes alinhadas ao agente arquiteto e ao projeto de financas pessoais.
 
 ## Escopo e foco tecnico
-- Frontend: Next.js com JavaScript (sem TypeScript), rotas por pagina.
+- Frontend: Next.js com TypeScript, rotas por pagina.
 - Auth: cookies HttpOnly para JWT access/refresh quando possivel; documentar risco se storage no cliente.
 - Estado: React Query ou SWR.
 - UI: componentes reutilizaveis (botao, formulario, inputs de valor, seletores de data, graficos).
