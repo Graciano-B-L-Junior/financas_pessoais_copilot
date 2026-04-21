@@ -1,67 +1,120 @@
+%% System diagrams: Desenvolvimento e Produção
+%% Gerado pelo agente 'arquiteto' — 2026-04-21
+
+%% === Ambiente de Desenvolvimento ===
 flowchart TD
-  subgraph Frontend [Frontend - Next.js]
+  subgraph DevEnv [Ambiente de Desenvolvimento (docker-compose / local)]
+    DevLaptop["Laptop / Dev (VS Code)"]
+    DockerCompose["docker-compose\n(services, volumes, .env)"]
+  end
+
+  subgraph DevFrontend [Frontend - Next.js (dev)]
+    NextDev["Next.js dev server\n(hot-reload)"]
+  end
+
+  subgraph DevBackend [Backend - Django (dev)]
+    DjangoDev["Django runserver\n(DEBUG=True)"]
+  end
+
+  subgraph DevAsync [Assíncrono - Celery (dev)]
+    CeleryDev["Celery Worker (local)"]
+    BeatDev["Celery Beat (local)"]
+  end
+
+  subgraph DevData [Persistência & Serviços locais]
+    PostgresDev["Postgres (local, volume)"]
+    RedisDev["Redis (local)"]
+    MailDev["MailHog / Mailcatcher"]
+    StorageDev["Local storage / uploads"]
+  end
+
+  DevLaptop -->|Editar código & rodar| DockerCompose
+  DockerCompose --> NextDev
+  DockerCompose --> DjangoDev
+  DockerCompose --> PostgresDev
+  DockerCompose --> RedisDev
+  DockerCompose --> CeleryDev
+  DockerCompose --> BeatDev
+  DockerCompose --> MailDev
+  DockerCompose --> StorageDev
+
+  NextDev -->|SSR / fetch| DjangoDev
+  DjangoDev -->|read/write| PostgresDev
+  DjangoDev -->|cache / broker| RedisDev
+  DjangoDev -->|enqueue tasks| RedisDev
+  CeleryDev -->|processa tarefas| PostgresDev
+  BeatDev -->|agenda jobs| RedisDev
+
+  %% Notas: código montado como volume para hot-reload; .env local; DEBUG ativo; não usar dados sensíveis em dev.
+
+
+%% === Ambiente de Produção ===
+flowchart TD
+  subgraph Users [Usuários]
     Browser["Navegador (Usuário)"]
-    Next["Next.js (SSR / CSR)"]
-    CDN["CDN - Assets estáticos"]
   end
 
-  subgraph Ingress [Ingress / Proxy]
-    Proxy["Ingress / Nginx / Traefik"]
+  subgraph CDN [CDN / Edge]
+    CDNNode["CDN - Assets estáticos / cache"]
   end
 
-  subgraph Backend [Backend - Django + DRF]
-    API["Django + DRF (Gunicorn / Uvicorn)"]
-    Admin["Django Admin"]
+  subgraph Perimeter [Perímetro / Ingress]
+    LB["Load Balancer (TLS)"]
+    Ingress["Ingress / Nginx / Traefik"]
   end
 
-  subgraph Async [Assíncrono - Celery]
-    Beat["Celery Beat (agendador)"]
-    Workers["Celery Workers"]
+  subgraph Cluster [Kubernetes / PaaS Cluster]
+    subgraph FrontPods [Frontend - Next.js (SSR / Static)]
+      NextBuild["Next.js (build -> static/SSR)\nEdge / Node pods"]
+    end
+    subgraph APIPods [Backend - Django + Gunicorn/Uvicorn]
+      API["Django + Gunicorn/Uvicorn\n(replica set)"]
+      Admin["Django Admin (replica)"]
+    end
+    subgraph Workers [Background - Celery Workers]
+      Workers["Celery Workers (autoscale)"]
+      Beat["Celery Beat / K8s CronJob"]
+    end
   end
 
-  subgraph Data [Persistência & Cache]
-    Postgres["Postgres - banco principal"]
-    Redis["Redis - broker, cache, sessão, rate-limit"]
+  subgraph DataProd [Dados & Cache (gerenciados)]
+    PostgresPrimary["Postgres (managed, primary)"]
+    PostgresReplica["Postgres (replica read-only)"]
+    RedisProd["Redis (managed cluster)"]
+    ObjectStorage["Object Storage (S3)"]
   end
 
-  subgraph Auth [Autenticação]
-    JWT["JWT (access / refresh) - cookies HttpOnly"]
+  subgraph Observability [Observabilidade]
+    Sentry["Sentry (erros)"]
+    Prom["Prometheus & Grafana (métricas)"]
+    Logging["ELK / Loki (logs)"]
   end
 
-  External["Serviços externos (SMTP / Pagamentos / APIs)"]
-  Jenkins["Jenkins (CI / CD)"]
-  Sentry["Sentry (erros)"]
-  Prom["Prometheus & Grafana (métricas)"]
+  subgraph CI [CI/CD]
+    Jenkins["Jenkins (pipelines)"]
+  end
 
-  Browser -->|Solicita páginas / API| Next
-  Browser -->|Assets estáticos| CDN
-  Next -->|SSR / server-side fetch| Proxy
-  Browser -->|"XHR / fetch (inclui cookies HttpOnly)"| Proxy
+  Browser --> CDNNode
+  CDNNode --> LB
+  LB --> Ingress
+  Ingress --> NextBuild
+  Ingress --> API
 
-  Proxy --> API
-  Proxy --> Next
+  NextBuild -->|server-side API calls| API
+  API -->|read/write| PostgresPrimary
+  API -->|read from replica| PostgresReplica
+  API -->|cache / broker| RedisProd
+  API -->|upload| ObjectStorage
+  API -->|enqueue tasks| RedisProd
+  API -->|emit metrics| Prom
+  API -->|send traces/errors| Sentry
+  API -->|write logs| Logging
 
-  API -->|lê / escreve| Postgres
-  API -->|cache read / write| Redis
-  API -->|enfileira tarefas| Redis
-  API -->|"seta cookies (access / refresh)"| Browser
-  API --> Admin
+  Workers -->|processa tarefas| PostgresPrimary
+  Workers -->|integra serviços externos| External["SMTP / Pagamento / APIs"]
 
-  Redis -->|broker| Workers
-  Beat -->|agenda jobs| Redis
-  Workers -->|"processa tarefas (recorrências, relatórios, e-mails)"| Postgres
-  Workers -->|integra com| External
+  Jenkins -->|build/test/deploy| Cluster
+  Jenkins -->|trigger| LB
 
-  API -->|valida tokens| JWT
-  Browser -->|POST /auth/login| API
-  Browser -->|POST /auth/refresh| API
-  API -->|rotaciona refresh| Browser
-
-  Jenkins -->|build & deploy| Proxy
-  API -->|traces / erros| Sentry
-  API -->|metrics| Prom
-  Workers -->|metrics| Prom
-
-  %% Notas: Tokens JWT (access/refresh) armazenados em cookies HttpOnly para reduzir risco XSS.
-  %% Redis atua como broker do Celery e como cache/sessão quando aplicável.
-  %% Celery Beat executa tarefas agendadas (recorrências, geração de relatórios, envio de e-mails).
+  %% Segurança & operação:
+  %% - TLS no Load Balancer; secrets em Vault / K8s Secrets; RBAC; health/readiness probes; backups e failover; autoscaling para pods.
