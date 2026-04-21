@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────── TOKENS LIGHT ───────── */
+html {
+  --color-bg-page:        #F0F2F5;
+  --color-bg-card:        #FFFFFF;
+  --color-bg-sidebar:     #FFFFFF;
+  --color-border:         #E5E7EB;
+  --color-text-primary:   #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted:     #9CA3AF;
+  --color-primary:        #4CAF50;
+  --color-primary-dark:   #388E3C;
+  --color-primary-light:  #81C784;
+  --color-danger:         #EF4444;
+  --color-warning:        #F59E0B;
+  --color-info:           #3B82F6;
+  --color-success:        #4CAF50;
+}
+
+/* ───────── TOKENS DARK ───────── */
+html.dark {
+  --color-bg-page:        #0F1117;
+  --color-bg-card:        #1A1D27;
+  --color-bg-sidebar:     #1A1D27;
+  --color-border:         #2D3148;
+  --color-text-primary:   #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+  --color-text-muted:     #6B7280;
+  --color-primary:        #4CAF50;
+  --color-primary-dark:   #66BB6A;
+  --color-primary-light:  #81C784;
+  --color-danger:         #EF4444;
+  --color-warning:        #F59E0B;
+  --color-info:           #3B82F6;
+  --color-success:        #4CAF50;
+}
+
+/* Prevent FOUT: block until theme class is applied */
+html:not(.dark):not(.light) {
+  visibility: visible;
+}
+
+body {
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Foco visível acessível */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--color-border); border-radius: 9999px; }
