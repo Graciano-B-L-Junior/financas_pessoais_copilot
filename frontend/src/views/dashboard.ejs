@@ -1,0 +1,14 @@
+<%- include('partials-head', { title }) %>
+<section class="panel">
+  <h1>Dashboard</h1>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <% if (data && data.summary) { %>
+    <div class="grid">
+      <article class="card"><strong>Receitas</strong><span><%= data.summary.total_income %></span></article>
+      <article class="card"><strong>Despesas</strong><span><%= data.summary.total_expenses %></span></article>
+      <article class="card"><strong>Saldo</strong><span><%= data.summary.balance %></span></article>
+      <article class="card"><strong>Lancamentos</strong><span><%= data.summary.transaction_count %></span></article>
+    </div>
+  <% } %>
+</section>
+<%- include('partials-foot') %>

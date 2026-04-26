@@ -1,0 +1,13 @@
+<%- include('partials-head', { title }) %>
+<section class="panel">
+  <h1>Perfil</h1>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <% if (data && data.data) { %>
+    <dl class="details">
+      <div><dt>Nome</dt><dd><%= data.data.first_name %></dd></div>
+      <div><dt>Sobrenome</dt><dd><%= data.data.last_name %></dd></div>
+      <div><dt>Email</dt><dd><%= data.data.email %></dd></div>
+    </dl>
+  <% } %>
+</section>
+<%- include('partials-foot') %>

@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-financas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-financas_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-financas_prod}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - financas-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - financas-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    image: financas_backend:latest
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - financas-net
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    image: financas_worker:latest
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.prod
+    command: npm run worker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - financas-net
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    networks:
+      - financas-net
+
+volumes:
+  db-data:
+  redis-data:
+
+networks:
+  financas-net:
+    driver: bridge

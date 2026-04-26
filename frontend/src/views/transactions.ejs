@@ -1,0 +1,11 @@
+<%- include('partials-head', { title }) %>
+<section class="panel">
+  <h1>Lancamentos</h1>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <ul class="list">
+    <% if (data && data.results) { data.results.forEach(function(item) { %>
+      <li><strong><%= item.description %></strong> - <%= item.amount %> - <%= item.type %></li>
+    <% }); } %>
+  </ul>
+</section>
+<%- include('partials-foot') %>
