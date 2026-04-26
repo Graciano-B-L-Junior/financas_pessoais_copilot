@@ -1,6 +1,11 @@
 # Ignorar arquivos de ambiente
+.env
+.env.local
+.env.*.local
 backend/.env
 frontend/.env.local
+web/.env.local
+api/venv
 backend/venv
 
 # Python
