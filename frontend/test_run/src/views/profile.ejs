@@ -1,0 +1,61 @@
+<%- include('partials/head', { bodyClass: 'page--app', pageTitle }) %>
+<%- include('partials/nav-app') %>
+
+<main class="container page-shell">
+  <section class="grid-2">
+    <article class="surface summary-card">
+      <span class="eyebrow">Conta</span>
+      <h1 class="section-title">Perfil do usuario</h1>
+      <p>Atualize seus dados cadastrais e mantenha o acesso consistente em toda a plataforma.</p>
+
+      <div class="list-grid" style="margin-top: 1rem;">
+        <div class="list-item">
+          <strong>Nome</strong>
+          <span><%= values.first_name || '—' %> <%= values.last_name || '' %></span>
+        </div>
+        <div class="list-item">
+          <strong>Email</strong>
+          <span><%= values.email || '—' %></span>
+        </div>
+      </div>
+    </article>
+
+    <article class="surface form-card">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Editar perfil</span>
+          <h2 class="section-title">Informacoes cadastrais</h2>
+        </div>
+      </div>
+
+      <%- include('partials/flash') %>
+      <%- include('partials/error-banner', { errors }) %>
+
+      <form class="form-grid" method="post" action="/perfil">
+        <div class="grid-2">
+          <label class="field">
+            <span>Nome</span>
+            <input type="text" name="first_name" value="<%= values.first_name || '' %>" autocomplete="given-name" required />
+            <%- include('partials/field-errors', { errors, field: 'first_name' }) %>
+          </label>
+
+          <label class="field">
+            <span>Sobrenome</span>
+            <input type="text" name="last_name" value="<%= values.last_name || '' %>" autocomplete="family-name" required />
+            <%- include('partials/field-errors', { errors, field: 'last_name' }) %>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" value="<%= values.email || '' %>" autocomplete="email" required />
+          <%- include('partials/field-errors', { errors, field: 'email' }) %>
+        </label>
+
+        <button class="btn btn--primary" type="submit">Salvar perfil</button>
+      </form>
+    </article>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

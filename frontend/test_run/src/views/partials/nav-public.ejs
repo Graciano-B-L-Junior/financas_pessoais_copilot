@@ -1,0 +1,23 @@
+<header class="container page-shell">
+  <div class="site-header">
+    <div class="brand">
+      <div class="brand-mark">FP</div>
+      <div class="brand-text">
+        <strong><%= appName %></strong>
+        <span>controle financeiro em camadas claras e seguras</span>
+      </div>
+    </div>
+
+    <nav class="site-actions" aria-label="Navegação principal">
+      <% if (isAuthenticated) { %>
+        <a class="btn btn--soft" href="/dashboard">Abrir painel</a>
+        <form class="inline-form" method="post" action="/logout">
+          <button class="btn btn--ghost" type="submit">Sair</button>
+        </form>
+      <% } else { %>
+        <a class="btn btn--ghost" href="/login">Entrar</a>
+        <a class="btn btn--primary" href="/register">Criar conta</a>
+      <% } %>
+    </nav>
+  </div>
+</header>

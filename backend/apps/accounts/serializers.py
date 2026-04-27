@@ -1,7 +1,9 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -56,5 +58,21 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = "email"
 
     def validate(self, attrs):
-        attrs["username"] = attrs.get("email", "")
-        return super().validate(attrs)
+        email = attrs.get("email", "").strip().lower()
+        password = attrs.get("password", "")
+
+        self.user = authenticate(
+            request=self.context.get("request"),
+            username=email,
+            password=password,
+        )
+
+        if not self.user:
+            raise AuthenticationFailed("Nao foi possivel autenticar com as credenciais informadas.")
+
+        refresh = self.get_token(self.user)
+
+        return {
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        }

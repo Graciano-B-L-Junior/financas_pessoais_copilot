@@ -20,3 +20,23 @@ class RegisterViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(email="ana@example.com").exists())
+
+    def test_login_user_with_email_returns_tokens(self):
+        User.objects.create_user(
+            username="ana@example.com",
+            email="ana@example.com",
+            password="Senha@123",
+        )
+
+        response = self.client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": "ana@example.com",
+                "password": "Senha@123",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)

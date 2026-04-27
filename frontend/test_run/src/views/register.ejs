@@ -1,0 +1,70 @@
+<%- include('partials/head', { bodyClass: 'page--public', pageTitle }) %>
+<%- include('partials/nav-public') %>
+
+<main class="container page-shell">
+  <div class="auth-layout">
+    <section class="auth-visual surface">
+      <span class="eyebrow">Cadastro</span>
+      <h2>Abra sua conta e comece com um fluxo padronizado.</h2>
+      <p>O formulario segue a politica de senha exigida pelo backend e mostra mensagens claras quando algo falha.</p>
+      <div class="hero-preview">
+        <div class="hero-preview__grid">
+          <div class="hero-preview__mini"><strong>Senha</strong><span>Segura</span></div>
+          <div class="hero-preview__mini"><strong>Email</strong><span>Unico</span></div>
+          <div class="hero-preview__mini"><strong>Perfil</strong><span>Completo</span></div>
+          <div class="hero-preview__mini"><strong>Fluxo</strong><span>Direto</span></div>
+        </div>
+      </div>
+      <ul>
+        <li>Nome, sobrenome, email e senha sao obrigatorios.</li>
+        <li>Senha precisa ter maiuscula, minuscula, numero e caractere especial.</li>
+        <li>Erros do backend aparecem por campo e no topo do formulario.</li>
+      </ul>
+    </section>
+
+    <section class="auth-card surface surface--strong">
+      <div>
+        <h1>Criar conta</h1>
+        <p>Preencha seus dados para acessar o modulo financeiro completo.</p>
+      </div>
+
+      <%- include('partials/flash') %>
+      <%- include('partials/error-banner', { errors }) %>
+
+      <form class="form-grid" method="post" action="/register">
+        <div class="grid-2">
+          <label class="field">
+            <span>Nome</span>
+            <input type="text" name="first_name" value="<%= values.first_name || '' %>" autocomplete="given-name" required />
+            <%- include('partials/field-errors', { errors, field: 'first_name' }) %>
+          </label>
+
+          <label class="field">
+            <span>Sobrenome</span>
+            <input type="text" name="last_name" value="<%= values.last_name || '' %>" autocomplete="family-name" required />
+            <%- include('partials/field-errors', { errors, field: 'last_name' }) %>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" value="<%= values.email || '' %>" autocomplete="email" required />
+          <%- include('partials/field-errors', { errors, field: 'email' }) %>
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input type="password" name="password" autocomplete="new-password" required minlength="6" />
+          <small class="field-help">Minimo de 6 caracteres, com maiuscula, minuscula, numero e simbolo.</small>
+          <%- include('partials/field-errors', { errors, field: 'password' }) %>
+        </label>
+
+        <button class="btn btn--primary btn--block" type="submit">Criar conta</button>
+      </form>
+
+      <p class="help">Ja tem cadastro? <a href="/login">Entrar agora</a>.</p>
+    </section>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
