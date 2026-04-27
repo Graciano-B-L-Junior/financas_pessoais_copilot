@@ -1,18 +1,21 @@
-FROM cgr.dev/chainguard/node:latest-dev AS deps
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-COPY package.json .
-RUN npm install --omit=dev
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-FROM cgr.dev/chainguard/node:latest
-
-WORKDIR /app
-
-COPY --from=deps /app /app
+RUN npm run build
 
 EXPOSE 3000
 
-ENTRYPOINT ["node", "src/server.js"]
+CMD ["npm", "start"]

@@ -1,7 +1,8 @@
-const app = require("./app");
+const { createApp } = require("./app");
+const { port } = require("./config/env");
 
-const port = process.env.PORT || 3000;
+const app = createApp();
 
-app.listen(port, () => {
-  console.log(`frontend running on port ${port}`);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Frontend rodando na porta ${port}`);
 });

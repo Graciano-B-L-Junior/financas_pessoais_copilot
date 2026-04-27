@@ -1,13 +1,112 @@
-<%- include('partials-head', { title }) %>
-<section class="panel">
-  <h1>Analise de Perfil</h1>
-  <% if (error) { %><p class="error"><%= error %></p><% } %>
-  <% if (data && data.summary) { %>
-    <div class="grid">
-      <article class="card"><strong>Receita</strong><span><%= data.summary.income_total %></span></article>
-      <article class="card"><strong>Despesa</strong><span><%= data.summary.expense_total %></span></article>
-      <article class="card"><strong>Saldo</strong><span><%= data.summary.balance %></span></article>
+<%- include('partials/head', { bodyClass: 'page--app', pageTitle }) %>
+<%- include('partials/nav-app') %>
+
+<main class="container page-shell shell-grid">
+  <section class="surface panel">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">Analises</span>
+        <h1>Insights do perfil financeiro</h1>
+        <p>Resumo analitico com proporcoes, top categorias e sugestoes orientadas pelo comportamento do usuario.</p>
+      </div>
     </div>
-  <% } %>
-</section>
-<%- include('partials-foot') %>
+
+    <form class="filters" method="get" action="/analises">
+      <label class="field search-field search-field--narrow">
+        <span>Inicio</span>
+        <input type="date" name="start" value="<%= filters.start || '' %>" />
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Fim</span>
+        <input type="date" name="end" value="<%= filters.end || '' %>" />
+      </label>
+      <button class="btn btn--primary" type="submit">Atualizar analise</button>
+    </form>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric surface">
+      <span class="stat-label">Receitas</span>
+      <div class="metric-value metric-value--accent"><%= formatCurrency(analytics.summary?.income_total || 0) %></div>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Despesas</span>
+      <div class="metric-value metric-value--negative"><%= formatCurrency(analytics.summary?.expense_total || 0) %></div>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Saldo</span>
+      <div class="metric-value <%= Number(analytics.summary?.balance || 0) >= 0 ? 'metric-value--positive' : 'metric-value--negative' %>"><%= formatCurrency(analytics.summary?.balance || 0) %></div>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Despesa sobre receita</span>
+      <div class="metric-value"><%= formatPercent(analytics.summary?.expense_ratio || 0) %></div>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Receita base</span>
+      <div class="metric-value"><%= formatPercent(analytics.summary?.income_ratio || 0) %></div>
+    </article>
+  </section>
+
+  <section class="grid-2">
+    <article class="surface list-card">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Top categorias</span>
+          <h2 class="section-title">Onde o dinheiro se concentrou</h2>
+        </div>
+      </div>
+
+      <% if (analytics.top_categories && analytics.top_categories.length) { %>
+        <div class="list-grid">
+          <% analytics.top_categories.forEach(function(item) { %>
+            <div class="list-item">
+              <div class="list-item__title">
+                <strong><%= item.category %></strong>
+                <span class="badge badge--primary"><%= formatCurrency(item.total || 0) %></span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Nenhuma categoria no periodo</h3>
+          <p>Amplie o intervalo para visualizar a distribuicao analitica.</p>
+        </div>
+      <% } %>
+    </article>
+
+    <article class="surface list-card">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Insights</span>
+          <h2 class="section-title">Leituras e recomendacoes</h2>
+        </div>
+      </div>
+
+      <% if (analytics.insights && analytics.insights.length) { %>
+        <div class="list-grid">
+          <% analytics.insights.forEach(function(insight) { %>
+            <div class="insight surface" style="background: rgba(255,255,255,0.86);">
+              <div class="list-item__title">
+                <strong><%= insight.title %></strong>
+                <span class="badge <%= insight.severity === 'high' ? 'badge--danger' : insight.severity === 'medium' ? 'badge--warning' : 'badge--success' %>"><%= insight.code %></span>
+              </div>
+              <p><%= insight.description %></p>
+              <div class="callout" style="margin-top: 0.75rem;">
+                <strong>Sugestao</strong>
+                <span><%= insight.suggestion %></span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Sem insights no periodo</h3>
+          <p>O sistema vai gerar recomendacoes assim que houver dados suficientes.</p>
+        </div>
+      <% } %>
+    </article>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

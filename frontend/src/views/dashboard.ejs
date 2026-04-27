@@ -1,14 +1,188 @@
-<%- include('partials-head', { title }) %>
-<section class="panel">
-  <h1>Dashboard</h1>
-  <% if (error) { %><p class="error"><%= error %></p><% } %>
-  <% if (data && data.summary) { %>
-    <div class="grid">
-      <article class="card"><strong>Receitas</strong><span><%= data.summary.total_income %></span></article>
-      <article class="card"><strong>Despesas</strong><span><%= data.summary.total_expenses %></span></article>
-      <article class="card"><strong>Saldo</strong><span><%= data.summary.balance %></span></article>
-      <article class="card"><strong>Lancamentos</strong><span><%= data.summary.transaction_count %></span></article>
+<%- include('partials/head', { bodyClass: 'page--app', pageTitle }) %>
+<%- include('partials/nav-app') %>
+
+<main class="container page-shell shell-grid">
+  <section class="surface panel">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">Dashboard</span>
+        <h1>Seu resumo financeiro</h1>
+        <p>Visao consolidada com filtros por periodo, categoria, tipo, recorrencia e faixa de valor.</p>
+      </div>
+      <div class="chip">Atualizado a partir da API em tempo real</div>
     </div>
-  <% } %>
-</section>
-<%- include('partials-foot') %>
+
+    <form class="filters" method="get" action="/dashboard">
+      <label class="field search-field search-field--narrow">
+        <span>Inicio</span>
+        <input type="date" name="start" value="<%= filters.start || '' %>" />
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Fim</span>
+        <input type="date" name="end" value="<%= filters.end || '' %>" />
+      </label>
+      <label class="field search-field">
+        <span>Categoria</span>
+        <select name="category">
+          <option value="">Todas</option>
+          <% categories.forEach(function(category) { %>
+            <option value="<%= category.id %>" <%= String(filters.category || '') === String(category.id) ? 'selected' : '' %>><%= category.label %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Tipo</span>
+        <select name="type">
+          <option value="">Todos</option>
+          <option value="receita" <%= filters.type === 'receita' ? 'selected' : '' %>>Receita</option>
+          <option value="despesa" <%= filters.type === 'despesa' ? 'selected' : '' %>>Despesa</option>
+        </select>
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Recorrente</span>
+        <select name="is_recurring">
+          <option value="">Todos</option>
+          <option value="true" <%= filters.is_recurring === 'true' ? 'selected' : '' %>>Sim</option>
+          <option value="false" <%= filters.is_recurring === 'false' ? 'selected' : '' %>>Nao</option>
+        </select>
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Valor minimo</span>
+        <input type="number" step="0.01" min="0" name="min_amount" value="<%= filters.min_amount || '' %>" />
+      </label>
+      <label class="field search-field search-field--narrow">
+        <span>Valor maximo</span>
+        <input type="number" step="0.01" min="0" name="max_amount" value="<%= filters.max_amount || '' %>" />
+      </label>
+      <button class="btn btn--primary" type="submit">Aplicar filtros</button>
+    </form>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric surface">
+      <span class="stat-label">Receitas</span>
+      <div class="metric-value metric-value--accent"><%= formatCurrency(dashboard.summary?.total_income || 0) %></div>
+      <p class="metric-desc">Total do periodo filtrado.</p>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Despesas</span>
+      <div class="metric-value metric-value--negative"><%= formatCurrency(dashboard.summary?.total_expenses || 0) %></div>
+      <p class="metric-desc">Saidas consolidadas do periodo.</p>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Saldo</span>
+      <div class="metric-value <%= Number(dashboard.summary?.balance || 0) >= 0 ? 'metric-value--positive' : 'metric-value--negative' %>"><%= formatCurrency(dashboard.summary?.balance || 0) %></div>
+      <p class="metric-desc">Resultado entre entradas e saidas.</p>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Lançamentos</span>
+      <div class="metric-value"><%= dashboard.summary?.transaction_count || 0 %></div>
+      <p class="metric-desc">Quantidade de registros filtrados.</p>
+    </article>
+    <article class="metric surface">
+      <span class="stat-label">Recorrentes</span>
+      <div class="metric-value"><%= dashboard.summary?.recurring_count || 0 %></div>
+      <p class="metric-desc">Itens com recorrencia ativa.</p>
+    </article>
+  </section>
+
+  <section class="grid-2">
+    <article class="surface list-card">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Top categorias</span>
+          <h2 class="section-title">Onde o dinheiro mais circulou</h2>
+        </div>
+      </div>
+
+      <% if (dashboard.top_categories && dashboard.top_categories.length) { %>
+        <div class="list-grid">
+          <% dashboard.top_categories.forEach(function(item) { %>
+            <div class="list-item">
+              <div class="list-item__title">
+                <strong><%= item.category %></strong>
+                <span class="badge badge--primary"><%= formatCurrency(item.total || 0) %></span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Sem categorias no periodo</h3>
+          <p>Adicione lancamentos ou amplie o filtro para visualizar a distribuicao.</p>
+        </div>
+      <% } %>
+    </article>
+
+    <article class="surface table-card">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Recentes</span>
+          <h2 class="section-title">Ultimos lancamentos</h2>
+        </div>
+        <a class="btn btn--link" href="/lancamentos">Ver todos</a>
+      </div>
+
+      <% if (recentTransactions && recentTransactions.length) { %>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Descricao</th>
+                <th>Categoria</th>
+                <th>Tipo</th>
+                <th>Data</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentTransactions.forEach(function(transaction) { %>
+                <tr>
+                  <td><strong><%= transaction.description %></strong></td>
+                  <td><%= transaction.category?.name || transaction.category || '—' %></td>
+                  <td><span class="badge <%= transaction.type === 'receita' ? 'badge--success' : 'badge--danger' %>"><%= transaction.type %></span></td>
+                  <td><%= formatDate(transaction.date) %></td>
+                  <td><%= formatCurrency(transaction.amount || 0) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Nenhum lancamento encontrado</h3>
+          <p>Use o modulo de lancamentos para iniciar seu acompanhamento financeiro.</p>
+        </div>
+      <% } %>
+    </article>
+  </section>
+
+  <section class="surface panel">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">Proximos passos</span>
+        <h2 class="section-title">Acesso rapido aos outros modulos</h2>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <a class="feature surface" href="/categorias" style="text-decoration: none;">
+        <span class="feature-badge">Categorias</span>
+        <h3>Organize receitas e despesas</h3>
+        <p>Crie, edite, ative e remova categorias do jeito que o negocio exige.</p>
+      </a>
+      <a class="feature surface" href="/lancamentos" style="text-decoration: none;">
+        <span class="feature-badge">Lancamentos</span>
+        <h3>Fluxo completo de CRUD</h3>
+        <p>Inclua recorrencias, filtros e edicao rapida de movimentacoes.</p>
+      </a>
+      <a class="feature surface" href="/analises" style="text-decoration: none;">
+        <span class="feature-badge">Analises</span>
+        <h3>Insights do perfil financeiro</h3>
+        <p>Acompanhe proporcoes, categorias mais frequentes e alertas de comportamento.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,12 +1,13 @@
-FROM cgr.dev/chainguard/node:latest-dev
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json .
+COPY . .
+
+COPY package.json package-lock.json* ./
 RUN npm install
 
-COPY . .
 
 EXPOSE 3000
 
-ENTRYPOINT ["npm", "run", "dev"]
+CMD ["npm", "run", "dev"]

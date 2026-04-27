@@ -1,0 +1,56 @@
+<%- include('partials/head', { bodyClass: 'page--app', pageTitle }) %>
+<%- include('partials/nav-app') %>
+
+<main class="container page-shell">
+  <section class="surface form-card">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">Editar</span>
+        <h1>Editar categoria</h1>
+        <p>Atualize nome, tipo, descricao e status sem recriar o registro.</p>
+      </div>
+    </div>
+
+    <%- include('partials/flash') %>
+    <%- include('partials/error-banner', { errors }) %>
+
+    <form class="form-grid" method="post" action="/categorias/<%= category.id %>/editar">
+      <label class="field">
+        <span>Nome</span>
+        <input type="text" name="name" value="<%= values.name || '' %>" maxlength="120" required />
+        <%- include('partials/field-errors', { errors, field: 'name' }) %>
+      </label>
+
+      <label class="field">
+        <span>Tipo</span>
+        <select name="type" required>
+          <option value="receita" <%= values.type === 'receita' ? 'selected' : '' %>>Receita</option>
+          <option value="despesa" <%= values.type === 'despesa' ? 'selected' : '' %>>Despesa</option>
+        </select>
+        <%- include('partials/field-errors', { errors, field: 'type' }) %>
+      </label>
+
+      <label class="field">
+        <span>Descricao</span>
+        <textarea name="description" maxlength="500"><%= values.description || '' %></textarea>
+        <%- include('partials/field-errors', { errors, field: 'description' }) %>
+      </label>
+
+      <label class="field">
+        <span>Status</span>
+        <select name="is_active" required>
+          <option value="true" <%= String(values.is_active) === 'true' ? 'selected' : '' %>>Ativa</option>
+          <option value="false" <%= String(values.is_active) === 'false' ? 'selected' : '' %>>Inativa</option>
+        </select>
+        <%- include('partials/field-errors', { errors, field: 'is_active' }) %>
+      </label>
+
+      <div class="actions-row">
+        <button class="btn btn--primary" type="submit">Salvar alteracoes</button>
+        <a class="btn btn--ghost" href="/categorias">Voltar</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

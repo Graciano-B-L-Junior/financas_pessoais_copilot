@@ -24,13 +24,14 @@ pipeline {
       }
     }
 
-    stage('Frontend Lint and Tests') {
+    stage('Frontend Lint, Tests and Build') {
       agent { docker { image 'node:20-alpine' } }
       steps {
         dir('frontend') {
-          sh 'npm install'
+          sh 'npm ci'
           sh 'npm run lint'
           sh 'npm test'
+          sh 'npm run build'
         }
       }
     }

@@ -1,0 +1,16 @@
+<%- include('partials/head', { bodyClass: 'page--public', pageTitle }) %>
+<%- include('partials/nav-public') %>
+
+<main class="container page-shell">
+  <section class="surface panel empty-state" style="padding: 2rem;">
+    <span class="eyebrow">Erro</span>
+    <h1 class="section-title">Nao foi possivel concluir a operacao</h1>
+    <p><%= message || 'Tente novamente em alguns instantes.' %></p>
+    <div class="hero-actions" style="justify-content: center;">
+      <a class="btn btn--primary" href="/dashboard">Ir para o dashboard</a>
+      <a class="btn btn--ghost" href="/">Voltar para o inicio</a>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
