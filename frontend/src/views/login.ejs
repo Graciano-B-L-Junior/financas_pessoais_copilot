@@ -1,6 +1,13 @@
 <%- include('partials-head', { title }) %>
 <section class="panel">
   <h1>Login</h1>
+
+  <% if (typeof message !== 'undefined' && message) { %>
+    <div class="alert alert-success" style="color: green; margin-bottom: 1rem;">
+      <%= message %>
+    </div>
+  <% } %>
+
   <form method="post" action="#">
     <label>Email</label>
     <input type="email" name="email" placeholder="usuario@exemplo.com" />
@@ -8,5 +15,8 @@
     <input type="password" name="password" placeholder="Sua senha" />
     <button type="submit">Entrar</button>
   </form>
+  <p class="mt-1">
+    Não tem uma conta? <a href="/register">Cadastre-se aqui</a>.
+  </p>
 </section>
 <%- include('partials-foot') %>

@@ -8,12 +8,39 @@ function renderPage(res, view, extra = {}) {
   return res.render(view, {
     title: extra.title || "Financas Pessoais",
     error: extra.error || null,
+    message: extra.message || null,
     data: extra.data || null,
   });
 }
 
 router.get("/", (req, res) => renderPage(res, "home", { title: "Landing" }));
 router.get("/login", (req, res) => renderPage(res, "login", { title: "Login" }));
+router.get("/register", (req, res) => renderPage(res, "register", { title: "Cadastro" }));
+
+router.post("/register", async (req, res) => {
+  try {
+    const { first_name, last_name, email, password } = req.body;
+    
+    await api.post("/auth/register/", {
+      first_name,
+      last_name,
+      email,
+      password
+    });
+
+    return renderPage(res, "login", { 
+      title: "Login", 
+      message: "Cadastro realizado com sucesso! Faça login para continuar." 
+    });
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || "Erro ao realizar cadastro. Tente novamente.";
+    return renderPage(res, "register", { 
+      title: "Cadastro", 
+      error: errorMessage 
+    });
+  }
+});
+
 router.get("/dashboard", async (req, res) => {
   try {
     const response = await api.get("/dashboard/");
