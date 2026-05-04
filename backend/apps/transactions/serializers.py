@@ -1,16 +1,20 @@
 from rest_framework import serializers
 
 from apps.categories.models import Category
+from apps.categories.serializers import CategorySerializer
 
 from .models import Transaction
 
 
 class TransactionSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
     class Meta:
         model = Transaction
         fields = (
             "id",
             "category",
+            "category_name",
             "description",
             "amount",
             "type",

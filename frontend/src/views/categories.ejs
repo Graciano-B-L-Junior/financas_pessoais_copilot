@@ -4,11 +4,9 @@
 <main class="container page-shell shell-grid">
   <section class="surface panel">
     <div class="page-heading">
-      <div>
         <span class="eyebrow">Categorias</span>
         <h1>Gestao de categorias</h1>
         <p>Crie categorias para receitas e despesas, filtre por tipo e altere o status sem perder o historico.</p>
-      </div>
       <div class="chip"><%= categories.length %> registros</div>
     </div>
 
@@ -39,10 +37,8 @@
   <section class="grid-2">
     <article class="surface form-card">
       <div class="page-heading">
-        <div>
           <span class="eyebrow">Nova categoria</span>
           <h2 class="section-title">Cadastrar categoria</h2>
-        </div>
       </div>
 
       <form class="form-grid" method="post" action="/categorias">
@@ -83,10 +79,8 @@
 
     <article class="surface table-card">
       <div class="page-heading">
-        <div>
           <span class="eyebrow">Lista</span>
           <h2 class="section-title">Categorias cadastradas</h2>
-        </div>
       </div>
 
       <% if (categories.length) { %>

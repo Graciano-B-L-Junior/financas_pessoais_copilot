@@ -4,11 +4,9 @@
 <main class="container page-shell shell-grid">
   <section class="surface panel">
     <div class="page-heading">
-      <div>
-        <span class="eyebrow">Lancamentos</span>
-        <h1>Movimentacoes financeiras</h1>
-        <p>Registre receitas, despesas e recorrencias com filtros de periodo e categoria.</p>
-      </div>
+      <span class="eyebrow">Lancamentos</span>
+      <h1>Movimentacoes financeiras</h1>
+      <p>Registre receitas, despesas e recorrencias com filtros de periodo e categoria.</p>
       <div class="chip"><%= transactions.length %> registros</div>
     </div>
 
@@ -56,10 +54,8 @@
   <section class="grid-2">
     <article class="surface form-card">
       <div class="page-heading">
-        <div>
-          <span class="eyebrow">Novo lancamento</span>
-          <h2 class="section-title">Cadastrar movimentacao</h2>
-        </div>
+        <span class="eyebrow">Novo lancamento</span>
+        <h2 class="section-title">Cadastrar movimentacao</h2>
       </div>
 
       <% if (!activeCategories.length) { %>
@@ -108,17 +104,17 @@
         <div class="grid-2">
           <label class="field">
             <span>Valor</span>
-            <input type="text" name="amount" value="<%= values.amount || '' %>" placeholder="0,00" required />
+            <input type="text" id="amountInput" name="amount" value="<%= values.amount || '' %>" placeholder="0,00" required />
             <%- include('partials/field-errors', { errors, field: 'amount' }) %>
           </label>
 
           <label class="field" style="display:flex; align-items:center; gap:0.65rem; margin-top: 1.9rem;">
-            <input type="checkbox" name="is_recurring" value="true" <%= values.is_recurring ? 'checked' : '' %> />
+            <input type="checkbox" id="recurringCheckbox" name="is_recurring" value="true" <%= values.is_recurring ? 'checked' : '' %> />
             <span>Recorrente</span>
           </label>
         </div>
 
-        <div class="grid-3">
+        <div id="recurringFields" class="grid-3" style="display: <%= values.is_recurring ? 'grid' : 'none' %>;">
           <label class="field">
             <span>Frequencia</span>
             <select name="frequency">
@@ -146,14 +142,42 @@
 
         <button class="btn btn--primary" type="submit" <%= activeCategories.length ? '' : 'disabled' %>>Salvar lancamento</button>
       </form>
+
+      <script>
+        (function() {
+          const recurringCheckbox = document.getElementById('recurringCheckbox');
+          const recurringFields = document.getElementById('recurringFields');
+
+          if (recurringCheckbox && recurringFields) {
+            recurringCheckbox.addEventListener('change', function() {
+              recurringFields.style.display = this.checked ? 'grid' : 'none';
+            });
+          }
+
+          // Máscara monetária em BRL
+          const amountInput = document.getElementById('amountInput');
+          if (amountInput) {
+            amountInput.addEventListener('input', function(e) {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length === 0) {
+                e.target.value = '';
+              } else {
+                value = (parseInt(value) / 100).toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                });
+                e.target.value = value;
+              }
+            });
+          }
+        })();
+      </script>
     </article>
 
     <article class="surface table-card">
       <div class="page-heading">
-        <div>
-          <span class="eyebrow">Historico</span>
-          <h2 class="section-title">Lancamentos registrados</h2>
-        </div>
+        <span class="eyebrow">Historico</span>
+        <h2 class="section-title">Lancamentos registrados</h2>
       </div>
 
       <% if (transactions.length) { %>
@@ -175,7 +199,7 @@
               <% transactions.forEach(function(transaction) { %>
                 <tr>
                   <td><strong><%= transaction.description %></strong></td>
-                  <td><%= transaction.category?.name || transaction.category || '—' %></td>
+                  <td><%= transaction.category_name || transaction.category?.name || transaction.category || '—' %></td>
                   <td><span class="badge <%= transaction.type === 'receita' ? 'badge--success' : 'badge--danger' %>"><%= transaction.type %></span></td>
                   <td><%= formatDate(transaction.date) %></td>
                   <td><%= formatCurrency(transaction.amount || 0) %></td>

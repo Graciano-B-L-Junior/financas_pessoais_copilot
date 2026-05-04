@@ -4,11 +4,9 @@
 <main class="container page-shell shell-grid">
   <section class="surface panel">
     <div class="page-heading">
-      <div>
         <span class="eyebrow">Analises</span>
         <h1>Insights do perfil financeiro</h1>
         <p>Resumo analitico com proporcoes, top categorias e sugestoes orientadas pelo comportamento do usuario.</p>
-      </div>
     </div>
 
     <form class="filters" method="get" action="/analises">
@@ -50,10 +48,8 @@
   <section class="grid-2">
     <article class="surface list-card">
       <div class="page-heading">
-        <div>
-          <span class="eyebrow">Top categorias</span>
-          <h2 class="section-title">Onde o dinheiro se concentrou</h2>
-        </div>
+        <span class="eyebrow">Top categorias</span>
+        <h2 class="section-title">Onde o dinheiro se concentrou</h2>
       </div>
 
       <% if (analytics.top_categories && analytics.top_categories.length) { %>
@@ -77,10 +73,8 @@
 
     <article class="surface list-card">
       <div class="page-heading">
-        <div>
-          <span class="eyebrow">Insights</span>
-          <h2 class="section-title">Leituras e recomendacoes</h2>
-        </div>
+        <span class="eyebrow">Insights</span>
+        <h2 class="section-title">Leituras e recomendacoes</h2>
       </div>
 
       <% if (analytics.insights && analytics.insights.length) { %>
