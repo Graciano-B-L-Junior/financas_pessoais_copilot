@@ -4,6 +4,7 @@ const {
   normalizeErrors,
   normalizeItem,
   normalizeList,
+  buildQueryString,
   parseBoolean,
   parseDate,
   parseInteger,
@@ -414,6 +415,24 @@ async function showTransactions(req, res) {
     });
   }
 
+  const meta = transactionsResponse.data || {};
+  const count = Number(meta.count) || 0;
+  const page = Number(req.query.page) || 1;
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(count / pageSize));
+  const pagination = {
+    count,
+    page,
+    pageSize,
+    totalPages,
+    hasNext: !!meta.next,
+    hasPrevious: !!meta.previous,
+    nextPage: page < totalPages ? page + 1 : null,
+    previousPage: page > 1 ? page - 1 : null,
+  };
+
+  const baseQuery = buildQueryString(filters);
+
   return res.render("transactions", {
     activeCategories: extractCategoryOptions(normalizeList(activeCategoriesResponse.data)),
     categories: extractCategoryOptions(normalizeList(allCategoriesResponse.data)),
@@ -421,6 +440,8 @@ async function showTransactions(req, res) {
     filters,
     pageTitle: "Lancamentos",
     transactions: normalizeList(transactionsResponse.data),
+    pagination,
+    baseQuery,
     values: {
       amount: "",
       category: "",
@@ -459,6 +480,24 @@ async function showTransactionsWithFormError(req, res, response) {
     api.categoriesList(req, res, { is_active: true }),
   ]);
 
+  const meta = transactionsResponse.data || {};
+  const count = Number(meta.count) || 0;
+  const page = Number(req.query.page) || 1;
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(count / pageSize));
+  const pagination = {
+    count,
+    page,
+    pageSize,
+    totalPages,
+    hasNext: !!meta.next,
+    hasPrevious: !!meta.previous,
+    nextPage: page < totalPages ? page + 1 : null,
+    previousPage: page > 1 ? page - 1 : null,
+  };
+
+  const baseQuery = buildQueryString(filters);
+
   return res.status(400).render("transactions", {
     activeCategories: extractCategoryOptions(normalizeList(activeCategoriesResponse.data)),
     categories: extractCategoryOptions(normalizeList(allCategoriesResponse.data)),
@@ -466,6 +505,8 @@ async function showTransactionsWithFormError(req, res, response) {
     filters,
     pageTitle: "Lancamentos",
     transactions: normalizeList(transactionsResponse.data),
+    pagination,
+    baseQuery,
     values: {
       amount: req.body.amount || "",
       category: req.body.category || "",

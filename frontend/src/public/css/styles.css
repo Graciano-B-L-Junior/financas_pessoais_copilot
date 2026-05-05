@@ -761,6 +761,16 @@ button.btn:hover,
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.8);
+  max-height: 500px;
+}
+
+/* Pagination layout */
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .table {
