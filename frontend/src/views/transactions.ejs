@@ -178,6 +178,26 @@
       <div class="page-heading">
         <span class="eyebrow">Historico</span>
         <h2 class="section-title">Lancamentos registrados</h2>
+<script>
+  // Máscara monetária BRL para campo de valor
+  (function() {
+    const amountInput = document.getElementById('amountInput');
+    if (amountInput) {
+      amountInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length === 0) {
+          e.target.value = '';
+        } else {
+          value = (parseInt(value) / 100).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          e.target.value = value;
+        }
+      });
+    }
+  })();
+</script>
       </div>
 
       <% if (transactions.length) { %>
