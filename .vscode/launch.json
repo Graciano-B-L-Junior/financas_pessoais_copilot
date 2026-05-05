@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Frontend (Docker)",
+      "address": "localhost",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}/frontend/src",
+      "remoteRoot": "/app/src"
+    },
+    {
+      "name": "Attach to Backend (Docker)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend",
+          "remoteRoot": "/app"
+        }
+      ]
+    }
+  ]
+}

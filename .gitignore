@@ -26,6 +26,5 @@ frontend/coverage/
 *.log
 
 # IDE
-.vscode/
 .idea/
 *.swp
