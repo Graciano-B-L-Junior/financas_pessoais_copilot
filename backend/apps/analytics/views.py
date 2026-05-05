@@ -1,4 +1,5 @@
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncMonth
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -41,6 +42,36 @@ class DashboardView(APIView):
         top_categories = list(
             queryset.values("category__name").annotate(total=Sum("amount")).order_by("-total")[:5]
         )
+        
+        # Monthly series: group by month for income and expenses
+        monthly_data = queryset.annotate(month=TruncMonth("date")).values("month").annotate(
+            income=Sum("amount", filter=Q(type="receita")),
+            expenses=Sum("amount", filter=Q(type="despesa"))
+        ).order_by("month")
+        monthly_series = [
+            {
+                "month": item["month"].strftime("%Y-%m") if item["month"] else None,
+                "income": item["income"] or 0,
+                "expenses": item["expenses"] or 0,
+            }
+            for item in monthly_data
+        ]
+        
+        # Category series: if category filter applied, show monthly evolution for that category
+        category_id = request.query_params.get("category")
+        category_series = []
+        if category_id:
+            category_monthly = queryset.annotate(month=TruncMonth("date")).values("month").annotate(
+                total=Sum("amount")
+            ).order_by("month")
+            category_series = [
+                {
+                    "month": item["month"].strftime("%Y-%m") if item["month"] else None,
+                    "total": item["total"] or 0,
+                }
+                for item in category_monthly
+            ]
+        
         return Response(
             {
                 "status": 200,
@@ -55,9 +86,70 @@ class DashboardView(APIView):
                 "top_categories": [
                     {"category": item["category__name"], "total": item["total"]} for item in top_categories
                 ],
-                "monthly_series": [],
+                "monthly_series": monthly_series,
+                "category_series": category_series,
             }
         )
+
+
+class CategorySeriesView(APIView):
+    """
+    Endpoint para obter série temporal de despesas por categoria.
+    
+    Query params:
+    - category_id: ID da categoria (obrigatório)
+    - start: Data de início (YYYY-MM-DD)
+    - end: Data de fim (YYYY-MM-DD)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        category_id = request.query_params.get("category_id")
+        start = request.query_params.get("start")
+        end = request.query_params.get("end")
+
+        if not category_id:
+            return Response(
+                {
+                    "status": 400,
+                    "status_text": "Bad Request",
+                    "message": "category_id is required",
+                    "category_series": [],
+                },
+                status=400,
+            )
+
+        queryset = Transaction.objects.filter(
+            user=request.user,
+            category_id=category_id
+        )
+
+        if start:
+            queryset = queryset.filter(date__gte=start)
+        if end:
+            queryset = queryset.filter(date__lte=end)
+
+        # Group by month and sum amounts
+        monthly_data = queryset.annotate(month=TruncMonth("date")).values("month").annotate(
+            total=Sum("amount")
+        ).order_by("month")
+
+        category_series = [
+            {
+                "month": item["month"].strftime("%Y-%m") if item["month"] else None,
+                "total": float(item["total"] or 0),
+            }
+            for item in monthly_data
+        ]
+
+        return Response(
+            {
+                "status": 200,
+                "status_text": "OK",
+                "category_series": category_series,
+            }
+        )
+
 
 
 class ProfileAnalyticsView(APIView):

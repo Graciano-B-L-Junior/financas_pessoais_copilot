@@ -805,6 +805,35 @@ button.btn:hover,
   flex-wrap: wrap;
 }
 
+/* Charts layout */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-card {
+  padding: 1.5rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card .page-heading {
+  margin-bottom: 1rem;
+}
+
+.chart-card canvas {
+  flex: 1;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .list-grid {
   display: grid;
   gap: 0.85rem;

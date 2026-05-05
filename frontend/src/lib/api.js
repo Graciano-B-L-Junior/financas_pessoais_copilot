@@ -159,6 +159,7 @@ module.exports = {
   categoriesList,
   categoriesRetrieve,
   categoriesUpdate,
+  client,
   dashboardGet,
   login,
   logout,
@@ -172,4 +173,5 @@ module.exports = {
   transactionsList,
   transactionsRetrieve,
   transactionsUpdate,
+  withAuthHeaders,
 };

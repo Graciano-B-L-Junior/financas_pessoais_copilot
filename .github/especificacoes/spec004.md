@@ -26,6 +26,7 @@ Este módulo cobre a exibição de totais, resumos e listas agregadas de receita
 - **C005** O sistema deve diferenciar receitas e despesas nos agregados.
 - **C006** O usuário deve poder consultar visão consolidada e dados para gráficos.
 - **C007** Categorias inativas não devem aparecer como opção de filtro para novos filtros de lançamento, salvo regra futura específica.
+- **C008** O dashboard deve ter gráficos referentes a todo tipo de transação, e que possa ser filtrada por valor monetario, categoria, data
 
 ## 5. Requisitos Funcionais
 - **RF001** Exibir resumo financeiro do período selecionado.

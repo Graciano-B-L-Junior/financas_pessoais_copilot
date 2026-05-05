@@ -3,6 +3,7 @@ const express = require("express");
 const asyncHandler = require("../lib/asyncHandler");
 const { requireAuth } = require("../middlewares/session");
 const pages = require("../controllers/pages");
+const api = require("../lib/api");
 
 const publicRouter = express.Router();
 const appRouter = express.Router();
@@ -13,6 +14,21 @@ publicRouter.post("/login", asyncHandler(pages.submitLogin));
 publicRouter.get("/register", asyncHandler(pages.showRegister));
 publicRouter.post("/register", asyncHandler(pages.submitRegister));
 publicRouter.post("/logout", asyncHandler(pages.logout));
+
+// API Routes — definidas antes do requireAuth para retornar JSON 401 em vez de redirecionar para HTML
+appRouter.get("/api/dashboard/category-series/", asyncHandler(async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.status(401).json({ status: 401, status_text: "Unauthorized", category_series: [] });
+  }
+  const response = await api.request({
+    method: "get",
+    path: "/dashboard/category-series/",
+    params: req.query,
+    req,
+    res,
+  });
+  return res.status(response.status).json(response.data);
+}));
 
 appRouter.use(requireAuth);
 

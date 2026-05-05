@@ -107,6 +107,86 @@
     </article>
   </section>
 
+  <section class="charts-section">
+    <style>
+      .charts-section {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl, 2rem);
+        width: 100%;
+      }
+      
+      .chart-card {
+        padding: var(--spacing-lg, 1.5rem);
+        border-radius: var(--radius, 8px);
+      }
+      
+      .chart-card canvas {
+        max-height: 400px;
+        margin-top: var(--spacing-md, 1rem);
+      }
+      
+      @media (min-width: 1024px) {
+        .charts-section {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <article class="surface chart-card">
+      <div class="page-heading">
+        <span class="eyebrow">Evolução</span>
+        <h2 class="section-title">Receitas vs Despesas por mês</h2>
+      </div>
+      <% if (dashboard.monthly_series && dashboard.monthly_series.length > 0) { %>
+        <canvas id="monthlyChart"></canvas>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Sem dados para o período</h3>
+          <p>Amplie o período de filtro para visualizar a evolução mensal.</p>
+        </div>
+      <% } %>
+    </article>
+
+    <article class="surface chart-card">
+      <div class="page-heading">
+        <span class="eyebrow">Distribuição</span>
+        <h2 class="section-title">Top categorias</h2>
+      </div>
+      <% if (dashboard.top_categories && dashboard.top_categories.length) { %>
+        <canvas id="categoriesChart"></canvas>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Sem categorias no periodo</h3>
+          <p>Adicione lancamentos ou amplie o filtro para visualizar a distribuicao.</p>
+        </div>
+      <% } %>
+    </article>
+
+    <article class="surface chart-card">
+      <div class="page-heading">
+        <span class="eyebrow">Detalhado</span>
+        <h2 class="section-title">Evolução por categoria</h2>
+      </div>
+      <label class="field search-field" style="margin-bottom: var(--spacing-md, 1rem);">
+        <span>Selecione uma categoria</span>
+        <select id="categoryFilterSelect" name="category-evolution-filter">
+          <option value="">Escolha uma categoria para ver a evolução</option>
+          <% categories.forEach(function(category) { %>
+            <option value="<%= category.id %>"><%= category.label %></option>
+          <% }); %>
+        </select>
+      </label>
+      <div id="categoryEvolutionContainer" style="display: none;">
+        <canvas id="categoryEvolutionChart"></canvas>
+      </div>
+      <div id="categoryEvolutionEmpty" class="empty-state" style="display: block;">
+        <h3>Selecione uma categoria</h3>
+        <p>Escolha uma categoria acima para visualizar a evolução mensal de gastos.</p>
+      </div>
+    </article>
+  </section>
+
   <section class="grid-2">
     <article class="surface list-card">
       <div class="page-heading">
@@ -174,6 +254,7 @@
     </article>
   </section>
 
+
   <section class="surface panel">
     <div class="page-heading">
       <span class="eyebrow">Proximos passos</span>
@@ -198,6 +279,317 @@
       </a>
     </div>
   </section>
+
+  <script>
+    // Color palette for consistent visualization
+    const colorPalette = {
+      primary: '#2563eb',
+      success: '#059669',
+      danger: '#dc2626',
+      warning: '#f59e0b',
+      info: '#0891b2',
+      purple: '#9333ea',
+      indigo: '#4f46e5',
+      pink: '#ec4899',
+      teal: '#14b8a6',
+      amber: '#d97706'
+    };
+
+    const categoryColors = [
+      '#0f766e', '#2563eb', '#059669', '#d97706', '#dc2626',
+      '#9333ea', '#4f46e5', '#ec4899', '#14b8a6', '#7c3aed'
+    ];
+
+    // Monthly chart (line)
+    const monthlyCanvas = document.getElementById('monthlyChart');
+    if (monthlyCanvas) {
+      const monthlyData = <%- JSON.stringify(dashboard.monthly_series || []) %>;
+      if (monthlyData.length > 0) {
+        new Chart(monthlyCanvas, {
+          type: 'line',
+          data: {
+            labels: monthlyData.map(m => m.month),
+            datasets: [
+              {
+                label: 'Receitas',
+                data: monthlyData.map(m => m.income),
+                borderColor: colorPalette.success,
+                backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                borderWidth: 2.5,
+                tension: 0.35,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: colorPalette.success,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
+              },
+              {
+                label: 'Despesas',
+                data: monthlyData.map(m => m.expenses),
+                borderColor: colorPalette.danger,
+                backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                borderWidth: 2.5,
+                tension: 0.35,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: colorPalette.danger,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 16,
+                  font: { size: 13, weight: '500' }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                cornerRadius: 6,
+                displayColors: true,
+                callbacks: {
+                  label: function(context) {
+                    const value = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(context.parsed.y);
+                    return context.dataset.label + ': ' + value;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return new Intl.NumberFormat('pt-BR', {
+                      notation: 'compact',
+                      compactDisplay: 'short',
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(value);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Categories chart (doughnut)
+    const categoriesCanvas = document.getElementById('categoriesChart');
+    if (categoriesCanvas) {
+      const topData = <%- JSON.stringify(dashboard.top_categories || []) %>;
+      if (topData.length > 0) {
+        new Chart(categoriesCanvas, {
+          type: 'doughnut',
+          data: {
+            labels: topData.map(c => c.category),
+            datasets: [{
+              data: topData.map(c => c.total),
+              backgroundColor: categoryColors.slice(0, topData.length),
+              borderColor: '#fff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 12,
+                  font: { size: 12, weight: '500' }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                cornerRadius: 6,
+                callbacks: {
+                  label: function(context) {
+                    const value = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(context.parsed);
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return context.label + ': ' + value + ' (' + percentage + '%)';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Category evolution chart (dynamic, based on dropdown)
+    let categoryEvolutionChart = null;
+    const categorySelect = document.getElementById('categoryFilterSelect');
+    const categoryEvolutionContainer = document.getElementById('categoryEvolutionContainer');
+    const categoryEvolutionEmpty = document.getElementById('categoryEvolutionEmpty');
+    const categoryCanvas = document.getElementById('categoryEvolutionChart');
+
+    // Build time range from filters or default to last 12 months
+    function getDateRange() {
+      const params = new URLSearchParams(window.location.search);
+      const start = params.get('start');
+      const end = params.get('end');
+      
+      if (start && end) {
+        return { start, end };
+      }
+      
+      const today = new Date();
+      const twelveMonthsAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+      
+      return {
+        start: twelveMonthsAgo.toISOString().split('T')[0],
+        end: today.toISOString().split('T')[0]
+      };
+    }
+
+    async function loadCategoryEvolution(categoryId) {
+      if (!categoryId) {
+        categoryEvolutionContainer.style.display = 'none';
+        categoryEvolutionEmpty.style.display = 'block';
+        if (categoryEvolutionChart) {
+          categoryEvolutionChart.destroy();
+          categoryEvolutionChart = null;
+        }
+        return;
+      }
+
+      const dateRange = getDateRange();
+      const url = `/api/dashboard/category-series?category_id=${categoryId}&start=${dateRange.start}&end=${dateRange.end}`;
+
+      try {
+        const response = await fetch(url, { credentials: 'include' });
+        if (response.status === 401) {
+          window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+          return;
+        }
+        if (!response.ok) throw new Error('Failed to load category data');
+        
+        const data = await response.json();
+        const series = data.category_series || [];
+
+        if (series.length === 0) {
+          categoryEvolutionContainer.style.display = 'none';
+          categoryEvolutionEmpty.style.display = 'block';
+          return;
+        }
+
+        categoryEvolutionContainer.style.display = 'block';
+        categoryEvolutionEmpty.style.display = 'none';
+
+        if (categoryEvolutionChart) {
+          categoryEvolutionChart.destroy();
+        }
+
+        categoryEvolutionChart = new Chart(categoryCanvas, {
+          type: 'line',
+          data: {
+            labels: series.map(m => m.month),
+            datasets: [{
+              label: 'Gastos',
+              data: series.map(m => m.total),
+              borderColor: colorPalette.primary,
+              backgroundColor: 'rgba(37, 99, 235, 0.08)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointRadius: 4,
+              pointBackgroundColor: colorPalette.primary,
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 16,
+                  font: { size: 13, weight: '500' }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                cornerRadius: 6,
+                callbacks: {
+                  label: function(context) {
+                    const value = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(context.parsed.y);
+                    return context.dataset.label + ': ' + value;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return new Intl.NumberFormat('pt-BR', {
+                      notation: 'compact',
+                      compactDisplay: 'short',
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(value);
+                  }
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao carregar série de categoria:', error);
+        categoryEvolutionContainer.style.display = 'none';
+        categoryEvolutionEmpty.style.display = 'block';
+      }
+    }
+
+    // Event listener para mudança de categoria
+    if (categorySelect) {
+      categorySelect.addEventListener('change', function(e) {
+        loadCategoryEvolution(e.target.value);
+      });
+    }
+  </script>
 </main>
 
 <%- include('partials/footer') %>
