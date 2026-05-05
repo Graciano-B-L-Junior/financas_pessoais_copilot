@@ -1,0 +1,105 @@
+from django.core.management.base import BaseCommand, CommandError
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from decimal import Decimal
+import random
+from datetime import timedelta
+
+from apps.categories.models import Category
+from apps.transactions.models import Transaction
+from django.db import transaction
+
+
+class Command(BaseCommand):
+    help = "Seed sample categories and transactions for a given user"
+
+    def add_arguments(self, parser):
+        parser.add_argument("--username", type=str, help="Username of target user")
+        parser.add_argument("--email", type=str, help="Email of target user")
+        parser.add_argument("--select", action="store_true", help="Interactively select a user")
+        parser.add_argument("--transactions", type=int, default=10, help="Number of sample transactions to create (total)")
+
+    def handle(self, *args, **options):
+        User = get_user_model()
+        username = options.get("username")
+        email = options.get("email")
+        select = options.get("select")
+        total_transactions = options.get("transactions") or 10
+
+        user = None
+        if username:
+            user = User.objects.filter(username=username).first()
+        elif email:
+            user = User.objects.filter(email=email).first()
+        elif select:
+            users = list(User.objects.all().order_by("id")[:50])
+            if not users:
+                raise CommandError("No users found to select.")
+            self.stdout.write("Select a user to seed:")
+            for idx, u in enumerate(users, start=1):
+                self.stdout.write(f"{idx}. {u.username} ({u.email}) [id={u.pk}]")
+            choice = input("Enter number of user: ").strip()
+            try:
+                idx = int(choice)
+                if idx < 1 or idx > len(users):
+                    raise ValueError()
+                user = users[idx - 1]
+            except Exception:
+                raise CommandError("Invalid selection")
+        else:
+            raise CommandError("Please provide --username, --email or --select to choose a user to seed")
+
+        if not user:
+            raise CommandError(f"User not found: username={username} email={email}")
+
+        income_categories = ["Salário", "Freelance", "Investimentos"]
+        expense_categories = ["Alimentação", "Transporte", "Lazer", "Moradia", "Saúde", "Educação"]
+
+        created_categories = []
+        created_tx = 0
+
+        with transaction.atomic():
+            # create or get categories
+            for name in income_categories:
+                cat, created = Category.objects.get_or_create(
+                    user=user, name=name, type=Category.TYPE_INCOME, defaults={"description": "Categoria seed"}
+                )
+                created_categories.append(cat)
+
+            for name in expense_categories:
+                cat, created = Category.objects.get_or_create(
+                    user=user, name=name, type=Category.TYPE_EXPENSE, defaults={"description": "Categoria seed"}
+                )
+                created_categories.append(cat)
+
+            random.seed(0)
+            days_back = 90
+
+            for i in range(total_transactions):
+                cat = random.choice(created_categories)
+                if cat.type == Category.TYPE_INCOME:
+                    amount_val = random.uniform(500.0, 5000.0)
+                else:
+                    amount_val = random.uniform(5.0, 300.0)
+
+                amount = Decimal(str(round(amount_val, 2)))
+                date = timezone.now().date() - timedelta(days=random.randint(0, days_back))
+                description = f"Seed: {cat.name} {date.isoformat()} #{i}"
+
+                exists = Transaction.objects.filter(user=user, description=description, amount=amount, date=date).exists()
+                if exists:
+                    continue
+
+                Transaction.objects.create(
+                    user=user,
+                    category=cat,
+                    description=description,
+                    amount=amount,
+                    type=cat.type,
+                    date=date,
+                    is_recurring=False,
+                )
+                created_tx += 1
+
+        self.stdout.write(self.style.SUCCESS(f"Seed completed for user {user.username} (id={user.pk})."))
+        self.stdout.write(self.style.SUCCESS(f"Categories ensured: {len(created_categories)}. Transactions created: {created_tx}"))

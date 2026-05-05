@@ -26,5 +26,28 @@
         }
       ]
     }
+    ,
+    {
+      "name": "Seed DB (Django) - Select user",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": ["seed", "--select"],
+      "django": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env.dev",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Seed DB (Django) - By username",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": ["seed", "--username", "<username>"],
+      "django": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env.dev",
+      "console": "integratedTerminal"
+    }
   ]
 }
