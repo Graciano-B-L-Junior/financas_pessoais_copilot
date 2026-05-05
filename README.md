@@ -96,3 +96,33 @@ npm test
 - Os endpoints e payloads devem seguir as specs `spec001` a `spec006`.
 - Qualquer mudanca de contrato deve atualizar a spec correspondente.
 - O scaffold gerado e uma base inicial e precisa de migrations Django antes de uso completo em producao.
+
+## Seed (popular banco de dados) — comando `manage.py seed`
+
+O projeto inclui um comando de management Django para popular dados de desenvolvimento: categorias e lançamentos para um usuário existente.
+
+Como usar:
+
+- Rodar dentro do container (recomendado):
+
+```bash
+docker compose -f docker-compose.dev.yml exec backend python manage.py seed --select
+```
+
+- Rodar localmente (fora do container): exporte variáveis de ambiente que apontem para o Postgres exposto pelo Docker (porta padrão do compose de dev é `5433`):
+
+```bash
+DB_HOST=localhost DB_PORT=5433 DB_USER=financas DB_PASSWORD=financas_pass DB_NAME=financas_dev \
+	python backend/manage.py seed --select
+```
+
+- Opções úteis:
+	- `--select` : lista usuários e permite selecionar interativamente
+	- `--username <name>` ou `--email <addr>` : escolhe o usuário diretamente
+	- `--transactions <n>` : número de transações a criar (padrão 10)
+	- `--force` : remove transações previamente criadas pelo seed (descrição começando com `Seed:`) antes de criar novas
+
+Observações importantes:
+- Se você rodar `manage.py` fora do container e obtiver erro de autenticação/host, execute o comando dentro do container ou ajuste `DB_HOST/DB_PORT` para o host/porta onde o Postgres está exposto.
+- O comando tenta fazer um fallback lendo `backend/.env.dev` quando aplicável para obter credenciais/porta.
+- O seed usa `transaction.atomic()` e é idempotente para evitar duplicar registros quando possível.
