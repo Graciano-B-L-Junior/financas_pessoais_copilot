@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django_filters",
     "apps.accounts",
     "apps.categories",
+    "apps.budgets",
     "apps.transactions",
     "apps.analytics",
 ]

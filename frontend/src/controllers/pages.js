@@ -31,6 +31,13 @@ function dashboardQuery(query = {}) {
   });
 }
 
+function budgetsQuery(query = {}) {
+  return removeUndefined({
+    month: query.month || undefined,
+    status: query.status || undefined,
+  });
+}
+
 function analyticsQuery(query = {}) {
   return removeUndefined({
     end: query.end || undefined,
@@ -88,6 +95,50 @@ function buildProfilePayload(body = {}) {
 
 function dashboardRecentTransactions(transactions = []) {
   return transactions.slice(0, 6);
+}
+
+function currentMonthInput() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+function defaultBudgetRows(count = 4) {
+  return Array.from({ length: count }, () => ({
+    category_id: "",
+    budgeted_amount: "",
+  }));
+}
+
+function budgetRowsFromBody(bodyCategories = []) {
+  const rows = Array.isArray(bodyCategories) ? bodyCategories : Object.values(bodyCategories || {});
+
+  return rows
+    .map((item) => ({
+      category_id: item?.category_id ?? "",
+      budgeted_amount: item?.budgeted_amount ?? "",
+    }))
+    .filter((item) => item.category_id !== "" || item.budgeted_amount !== "");
+}
+
+function buildBudgetPayload(body = {}) {
+  return removeUndefined({
+    categories: budgetRowsFromBody(body.categories)
+      .map((item) => removeUndefined({
+        budgeted_amount: parseMoney(item.budgeted_amount),
+        category_id: parseInteger(item.category_id),
+      })),
+    month: typeof body.month === "string" ? body.month.trim() : body.month,
+    total_amount: parseMoney(body.total_amount),
+  });
+}
+
+function budgetFormValues(body = {}) {
+  const categories = budgetRowsFromBody(body.categories);
+
+  return {
+    categories: categories.length ? categories : defaultBudgetRows(),
+    month: typeof body.month === "string" && body.month ? body.month : currentMonthInput(),
+    total_amount: typeof body.total_amount === "string" ? body.total_amount : body.total_amount || "",
+  };
 }
 
 function extractCategoryOptions(categories = []) {
@@ -232,6 +283,147 @@ async function showDashboard(req, res) {
     pageTitle: "Dashboard",
     recentTransactions: transactions,
   });
+}
+
+async function showBudgets(req, res) {
+  const filters = budgetsQuery(req.query);
+  const [budgetsResponse, expenseCategoriesResponse] = await Promise.all([
+    api.budgetsList(req, res, filters),
+    api.categoriesList(req, res, { is_active: true, type: "despesa" }),
+  ]);
+
+  if ([401, 403].includes(budgetsResponse.status)) {
+    return redirectLogin(res, req.originalUrl);
+  }
+
+  if (budgetsResponse.status >= 500) {
+    return res.status(502).render("error", {
+      message: "Nao foi possivel carregar os orçamentos agora.",
+      pageTitle: "Orçamentos indisponiveis",
+    });
+  }
+
+  const budgets = normalizeList(budgetsResponse.data);
+  const selectedBudgetId = req.query.budget || budgets[0]?.id;
+  let selectedBudget = null;
+
+  if (selectedBudgetId) {
+    const selectedResponse = await api.budgetsRetrieve(req, res, selectedBudgetId);
+
+    if ([401, 403].includes(selectedResponse.status)) {
+      return redirectLogin(res, req.originalUrl);
+    }
+
+    if (selectedResponse.status === 404) {
+      return res.status(404).render("not-found", {
+        message: "O orçamento solicitado nao foi encontrado.",
+        pageTitle: "Orçamento nao encontrado",
+      });
+    }
+
+    selectedBudget = normalizeItem(selectedResponse.data);
+  }
+
+  return res.render("budgets", {
+    budgets,
+    categories: extractCategoryOptions(normalizeList(expenseCategoriesResponse.data)),
+    errors: {},
+    filters,
+    pageTitle: "Orçamento",
+    selectedBudget,
+    values: budgetFormValues(req.body || {}),
+  });
+}
+
+async function showBudgetsWithFormError(req, res, response) {
+  const filters = budgetsQuery(req.query);
+  const [budgetsResponse, expenseCategoriesResponse] = await Promise.all([
+    api.budgetsList(req, res, filters),
+    api.categoriesList(req, res, { is_active: true, type: "despesa" }),
+  ]);
+
+  const budgets = normalizeList(budgetsResponse.data);
+  const selectedBudgetId = req.query.budget || budgets[0]?.id;
+  let selectedBudget = null;
+
+  if (selectedBudgetId) {
+    const selectedResponse = await api.budgetsRetrieve(req, res, selectedBudgetId);
+    if (selectedResponse.status === 200) {
+      selectedBudget = normalizeItem(selectedResponse.data);
+    }
+  }
+
+  return res.status(400).render("budgets", {
+    budgets,
+    categories: extractCategoryOptions(normalizeList(expenseCategoriesResponse.data)),
+    errors: normalizeErrors(response.data),
+    filters,
+    pageTitle: "Orçamento",
+    selectedBudget,
+    values: budgetFormValues(req.body || {}),
+  });
+}
+
+async function createBudget(req, res) {
+  const response = await api.budgetsCreate(req, res, buildBudgetPayload(req.body));
+
+  if (response.status === 201) {
+    const budget = normalizeItem(response.data);
+    setFlash(res, "success", "Orçamento cadastrado com sucesso.");
+    return res.redirect(303, `/orcamento?budget=${budget.id}`);
+  }
+
+  if ([401, 403].includes(response.status)) {
+    return redirectLogin(res, req.originalUrl);
+  }
+
+  return showBudgetsWithFormError(req, res, response);
+}
+
+async function finalizeBudget(req, res) {
+  const response = await api.budgetsFinalize(req, res, req.params.id);
+
+  if (response.status === 200) {
+    setFlash(res, "success", "Orçamento finalizado com sucesso.");
+    return res.redirect(303, `/orcamento?budget=${req.params.id}`);
+  }
+
+  if ([401, 403].includes(response.status)) {
+    return redirectLogin(res, req.originalUrl);
+  }
+
+  if (response.status === 404) {
+    return res.status(404).render("not-found", {
+      message: "O orçamento solicitado nao foi encontrado.",
+      pageTitle: "Orçamento nao encontrado",
+    });
+  }
+
+  setFlash(res, "warning", response.data?.message || "Nao foi possivel finalizar o orçamento.");
+  return res.redirect(303, "/orcamento");
+}
+
+async function deleteBudget(req, res) {
+  const response = await api.budgetsDelete(req, res, req.params.id);
+
+  if ([401, 403].includes(response.status)) {
+    return redirectLogin(res, req.originalUrl);
+  }
+
+  if (response.status === 404) {
+    return res.status(404).render("not-found", {
+      message: "O orçamento solicitado nao foi encontrado.",
+      pageTitle: "Orçamento nao encontrado",
+    });
+  }
+
+  if (response.status === 400) {
+    setFlash(res, "warning", response.data?.message || "Nao foi possivel excluir o orçamento.");
+    return res.redirect(303, "/orcamento");
+  }
+
+  setFlash(res, "info", "Orçamento removido com sucesso.");
+  return res.redirect(303, "/orcamento");
 }
 
 async function showCategories(req, res) {
@@ -680,14 +872,19 @@ async function showAnalytics(req, res) {
 
 module.exports = {
   buildCategoryPayload,
+  buildBudgetPayload,
   buildProfilePayload,
   buildTransactionPayload,
   createCategory,
+  createBudget,
   createTransaction,
   deleteCategory,
+  deleteBudget,
   deleteTransaction,
   logout,
   redirectLogin,
+  finalizeBudget,
+  showBudgets,
   showAnalytics,
   showCategories,
   showCategoryEdit,

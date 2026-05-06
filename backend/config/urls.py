@@ -6,11 +6,13 @@ from rest_framework.routers import DefaultRouter
 from apps.accounts.views import LogoutView, ProfileView, RegisterView
 from apps.accounts.views import CookieTokenObtainPairView, CookieTokenRefreshView
 from apps.analytics.views import DashboardView, ProfileAnalyticsView, CategorySeriesView
+from apps.budgets.views import BudgetViewSet
 from apps.categories.views import CategoryViewSet
 from apps.transactions.views import TransactionViewSet
 
 router = DefaultRouter()
 router.register("categories", CategoryViewSet, basename="category")
+router.register("budgets", BudgetViewSet, basename="budget")
 router.register("transactions", TransactionViewSet, basename="transaction")
 
 urlpatterns = [

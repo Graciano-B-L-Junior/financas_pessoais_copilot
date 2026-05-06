@@ -34,6 +34,11 @@ appRouter.use(requireAuth);
 
 appRouter.get("/dashboard", asyncHandler(pages.showDashboard));
 
+appRouter.get("/orcamento", asyncHandler(pages.showBudgets));
+appRouter.post("/orcamento", asyncHandler(pages.createBudget));
+appRouter.post("/orcamento/:id/finalizar", asyncHandler(pages.finalizeBudget));
+appRouter.post("/orcamento/:id/excluir", asyncHandler(pages.deleteBudget));
+
 appRouter.get("/categorias", asyncHandler(pages.showCategories));
 appRouter.post("/categorias", asyncHandler(pages.createCategory));
 appRouter.get("/categorias/:id/editar", asyncHandler(pages.showCategoryEdit));

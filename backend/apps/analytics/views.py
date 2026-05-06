@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.budgets.models import Budget
 from apps.transactions.models import Transaction
 
 
@@ -71,6 +72,25 @@ class DashboardView(APIView):
                 }
                 for item in category_monthly
             ]
+
+        budget_queryset = (
+            Budget.objects.filter(user=request.user)
+            .prefetch_related("categories__category")
+            .order_by("-month", "-created_at")
+        )
+        active_budget = budget_queryset.filter(status=Budget.STATUS_ACTIVE).first() or budget_queryset.first()
+        budget_summary = active_budget.calculate_execution(persist=False) if active_budget else None
+        budget_series = []
+        for budget in budget_queryset.order_by("month")[:6]:
+            execution = budget.calculate_execution(persist=False)
+            budget_series.append(
+                {
+                    "month": execution["month"],
+                    "budgeted": execution["budgeted_total"],
+                    "actual": execution["actual_expenses"],
+                    "execution_percentage": execution["execution_percentage"],
+                }
+            )
         
         return Response(
             {
@@ -88,6 +108,8 @@ class DashboardView(APIView):
                 ],
                 "monthly_series": monthly_series,
                 "category_series": category_series,
+                "budget_summary": budget_summary,
+                "budget_series": budget_series,
             }
         )
 

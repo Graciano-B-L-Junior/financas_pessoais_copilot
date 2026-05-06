@@ -105,6 +105,11 @@
       <div class="metric-value"><%= dashboard.summary?.recurring_count || 0 %></div>
       <p class="metric-desc">Itens com recorrencia ativa.</p>
     </article>
+    <article class="metric surface">
+      <span class="stat-label">Orçamento</span>
+      <div class="metric-value metric-value--accent"><%= formatPercent(dashboard.budget_summary?.execution_percentage || 0) %></div>
+      <p class="metric-desc">Execução do orçamento ativo.</p>
+    </article>
   </section>
 
   <section class="charts-section">
@@ -144,6 +149,21 @@
         <div class="empty-state">
           <h3>Sem dados para o período</h3>
           <p>Amplie o período de filtro para visualizar a evolução mensal.</p>
+        </div>
+      <% } %>
+    </article>
+
+    <article class="surface chart-card">
+      <div class="page-heading">
+        <span class="eyebrow">Orçamento</span>
+        <h2 class="section-title">Orçado vs realizado</h2>
+      </div>
+      <% if (dashboard.budget_series && dashboard.budget_series.length > 0) { %>
+        <canvas id="budgetChart"></canvas>
+      <% } else { %>
+        <div class="empty-state">
+          <h3>Sem orçamento cadastrado</h3>
+          <p>Crie um orçamento para acompanhar a evolução entre o valor previsto e o realizado.</p>
         </div>
       <% } %>
     </article>
@@ -277,6 +297,11 @@
         <h3>Insights do perfil financeiro</h3>
         <p>Acompanhe proporcoes, categorias mais frequentes e alertas de comportamento.</p>
       </a>
+      <a class="feature surface" href="/orcamento" style="text-decoration: none;">
+        <span class="feature-badge">Orçamento</span>
+        <h3>Planeje e compare gastos</h3>
+        <p>Registre metas mensais e acompanhe o realizado em relacao ao previsto.</p>
+      </a>
     </div>
   </section>
 
@@ -363,6 +388,87 @@
                 bodyFont: { size: 12 },
                 cornerRadius: 6,
                 displayColors: true,
+                callbacks: {
+                  label: function(context) {
+                    const value = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(context.parsed.y);
+                    return context.dataset.label + ': ' + value;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return new Intl.NumberFormat('pt-BR', {
+                      notation: 'compact',
+                      compactDisplay: 'short',
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(value);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Budget chart (bar)
+    const budgetCanvas = document.getElementById('budgetChart');
+    if (budgetCanvas) {
+      const budgetData = <%- JSON.stringify(dashboard.budget_series || []) %>;
+      if (budgetData.length > 0) {
+        new Chart(budgetCanvas, {
+          type: 'bar',
+          data: {
+            labels: budgetData.map(item => item.month),
+            datasets: [
+              {
+                label: 'Orçado',
+                data: budgetData.map(item => item.budgeted),
+                backgroundColor: 'rgba(37, 99, 235, 0.88)',
+                borderColor: colorPalette.primary,
+                borderWidth: 1,
+                borderRadius: 10,
+              },
+              {
+                label: 'Realizado',
+                data: budgetData.map(item => item.actual),
+                backgroundColor: 'rgba(217, 119, 6, 0.84)',
+                borderColor: colorPalette.amber,
+                borderWidth: 1,
+                borderRadius: 10,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 16,
+                  font: { size: 13, weight: '500' }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                cornerRadius: 6,
                 callbacks: {
                   label: function(context) {
                     const value = new Intl.NumberFormat('pt-BR', {

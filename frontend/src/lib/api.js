@@ -132,6 +132,26 @@ function categoriesDelete(req, res, id) {
   return request({ method: "delete", path: `/categories/${id}/`, req, res });
 }
 
+function budgetsList(req, res, params) {
+  return request({ method: "get", params, path: "/budgets/", req, res });
+}
+
+function budgetsCreate(req, res, data) {
+  return request({ data, method: "post", path: "/budgets/", req, res });
+}
+
+function budgetsRetrieve(req, res, id) {
+  return request({ method: "get", path: `/budgets/${id}/`, req, res });
+}
+
+function budgetsFinalize(req, res, id) {
+  return request({ method: "post", path: `/budgets/${id}/finalize/`, req, res });
+}
+
+function budgetsDelete(req, res, id) {
+  return request({ method: "delete", path: `/budgets/${id}/`, req, res });
+}
+
 function transactionsList(req, res, params) {
   return request({ method: "get", params, path: "/transactions/", req, res });
 }
@@ -159,6 +179,11 @@ module.exports = {
   categoriesList,
   categoriesRetrieve,
   categoriesUpdate,
+  budgetsCreate,
+  budgetsDelete,
+  budgetsFinalize,
+  budgetsList,
+  budgetsRetrieve,
   client,
   dashboardGet,
   login,

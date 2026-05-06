@@ -208,6 +208,14 @@ button {
   flex-wrap: nowrap;
 }
 
+nav.site-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
 .nav-links {
   display: flex;
   align-items: center;

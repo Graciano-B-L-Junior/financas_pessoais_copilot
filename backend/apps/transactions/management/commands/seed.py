@@ -7,19 +7,21 @@ from datetime import timedelta
 import os
 
 from apps.categories.models import Category
+from apps.budgets.models import Budget, BudgetCategory
 from apps.transactions.models import Transaction
 from django.db import transaction, connection
 from django.db.utils import OperationalError as DBOperationalError
 
 
 class Command(BaseCommand):
-    help = "Seed sample categories and transactions for a given user"
+    help = "Seed sample categories, transactions and budgets for a given user"
 
     def add_arguments(self, parser):
         parser.add_argument("--username", type=str, help="Username of target user")
         parser.add_argument("--email", type=str, help="Email of target user")
         parser.add_argument("--select", action="store_true", help="Interactively select a user")
         parser.add_argument("--transactions", type=int, default=10, help="Number of sample transactions to create (total)")
+        parser.add_argument("--budgets", type=int, default=1, help="Number of monthly budgets to create")
         parser.add_argument("--force", action="store_true", help="Remove existing seed transactions for the user before seeding")
 
     def handle(self, *args, **options):
@@ -28,6 +30,7 @@ class Command(BaseCommand):
         email = options.get("email")
         select = options.get("select")
         total_transactions = options.get("transactions") or 10
+        total_budgets = options.get("budgets") or 1
         force = options.get("force")
 
         # verify DB connectivity early to provide helpful error message
@@ -126,6 +129,18 @@ class Command(BaseCommand):
 
         created_categories = []
         created_tx = 0
+        created_budgets = 0
+
+        today = timezone.now().date()
+        budget_months = []
+        for offset in range(max(total_budgets, 1)):
+            month_base = today.replace(day=1)
+            current_year = month_base.year
+            current_month = month_base.month - offset
+            while current_month <= 0:
+                current_year -= 1
+                current_month += 12
+            budget_months.append(month_base.replace(year=current_year, month=current_month))
 
         with transaction.atomic():
             if force:
@@ -133,6 +148,9 @@ class Command(BaseCommand):
                 deleted = Transaction.objects.filter(user=user, description__startswith="Seed:").delete()
                 deleted_count = deleted[0] if isinstance(deleted, tuple) else deleted
                 self.stdout.write(self.style.WARNING(f"Removed {deleted_count} existing seed transactions for user {user.username}."))
+                deleted_budgets = Budget.objects.filter(user=user, month__in=budget_months).delete()
+                deleted_budget_count = deleted_budgets[0] if isinstance(deleted_budgets, tuple) else deleted_budgets
+                self.stdout.write(self.style.WARNING(f"Removed {deleted_budget_count} existing seed budgets for user {user.username}."))
             # create or get categories
             for name in income_categories:
                 cat, created = Category.objects.get_or_create(
@@ -175,5 +193,39 @@ class Command(BaseCommand):
                 )
                 created_tx += 1
 
+            expense_categories_objects = [category for category in created_categories if category.type == Category.TYPE_EXPENSE]
+            for budget_month in budget_months:
+                total_amount = Decimal("0")
+                budget_items = []
+
+                for category in expense_categories_objects:
+                    budgeted_amount = Decimal(str(round(random.uniform(150.0, 900.0), 2)))
+                    budget_items.append((category, budgeted_amount))
+                    total_amount += budgeted_amount
+
+                budget, created = Budget.objects.update_or_create(
+                    user=user,
+                    month=budget_month,
+                    defaults={
+                        "status": Budget.STATUS_ACTIVE,
+                        "total_amount": total_amount,
+                    },
+                )
+
+                budget.categories.all().delete()
+                BudgetCategory.objects.bulk_create(
+                    [
+                        BudgetCategory(
+                            budget=budget,
+                            category=category,
+                            budgeted_amount=budgeted_amount,
+                        )
+                        for category, budgeted_amount in budget_items
+                    ]
+                )
+                budget.calculate_execution(persist=True)
+                created_budgets += 1
+
         self.stdout.write(self.style.SUCCESS(f"Seed completed for user {user.username} (id={user.pk})."))
         self.stdout.write(self.style.SUCCESS(f"Categories ensured: {len(created_categories)}. Transactions created: {created_tx}"))
+        self.stdout.write(self.style.SUCCESS(f"Budgets ensured: {created_budgets}."))
