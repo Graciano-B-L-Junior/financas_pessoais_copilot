@@ -31,96 +31,10 @@
     </form>
   </section>
 
-  <section class="grid-2">
-    <article class="surface form-card">
-      <div class="page-heading">
-        <span class="eyebrow">Novo orçamento</span>
-        <h2 class="section-title">Cadastrar orçamento mensal</h2>
-      </div>
-
-      <% if (!categories.length) { %>
-        <div class="empty-state" style="margin-bottom: 1rem;">
-          <h3>Nenhuma categoria de despesa ativa</h3>
-          <p>Crie categorias de despesa antes de registrar um orçamento por categoria.</p>
-          <a class="btn btn--primary" href="/categorias">Ir para categorias</a>
-        </div>
-      <% } %>
-
-      <form class="form-grid" method="post" action="/orcamento">
-        <label class="field">
-          <span>Mês</span>
-          <input type="month" name="month" value="<%= values.month || '' %>" required />
-          <%- include('partials/field-errors', { errors, field: 'month' }) %>
-        </label>
-
-        <label class="field">
-          <span>Valor total</span>
-          <input type="text" id="budgetTotalInput" name="total_amount" value="<%= values.total_amount || '' %>" placeholder="0,00" />
-          <small>Se ficar em branco, o total será calculado pela soma das categorias.</small>
-          <%- include('partials/field-errors', { errors, field: 'total_amount' }) %>
-        </label>
-
-        <div class="surface" style="padding: 1rem; border-radius: var(--radius-md); background: rgba(255,255,255,0.78); border: 1px solid var(--line);">
-          <div class="page-heading" style="margin-bottom: 1rem;">
-            <span class="eyebrow">Categorias</span>
-            <h3 class="section-title" style="margin: 0;">Distribuição orçamentária</h3>
-          </div>
-
-          <div class="grid-2" style="gap: 0.85rem;">
-            <% values.categories.forEach(function(item, index) { %>
-              <label class="field">
-                <span>Categoria <%= index + 1 %></span>
-                <select name="categories[<%= index %>][category_id]">
-                  <option value="">Selecione</option>
-                  <% categories.forEach(function(category) { %>
-                    <option value="<%= category.id %>" <%= String(item.category_id || '') === String(category.id) ? 'selected' : '' %>><%= category.label %></option>
-                  <% }); %>
-                </select>
-              </label>
-
-              <label class="field">
-                <span>Valor</span>
-                <input type="text" class="budget-amount-input" name="categories[<%= index %>][budgeted_amount]" value="<%= item.budgeted_amount || '' %>" placeholder="0,00" />
-              </label>
-            <% }); %>
-          </div>
-
-          <%- include('partials/field-errors', { errors, field: 'categories' }) %>
-        </div>
-
-        <button class="btn btn--primary" type="submit" <%= categories.length ? '' : 'disabled' %>>Salvar orçamento</button>
-      </form>
-
-      <script>
-        (function() {
-          const totalInput = document.getElementById('budgetTotalInput');
-          const amountInputs = document.querySelectorAll('.budget-amount-input');
-
-          function applyMask(input) {
-            input.addEventListener('input', function(e) {
-              let value = e.target.value.replace(/\D/g, '');
-              if (value.length === 0) {
-                e.target.value = '';
-              } else {
-                value = (parseInt(value) / 100).toLocaleString('pt-BR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                });
-                e.target.value = value;
-              }
-            });
-          }
-
-          if (totalInput) {
-            applyMask(totalInput);
-          }
-
-          amountInputs.forEach(applyMask);
-        })();
-      </script>
-    </article>
-
-    <article class="surface chart-card">
+  <section class="surface chart-card" style="margin-bottom: 2rem;">
+    <div class="page-heading" style="display: flex; justify-content: space-between; align-content: flex-start; margin-bottom: 1.5rem;">
+      <button id="scrollToBudgetFormBtn" class="btn btn--primary" style="align-self: left;" title="Desça até o formulário de novo orçamento">Realizar cadastro</button>
+    </div>
       <div class="page-heading">
         <span class="eyebrow">Resumo</span>
         <h2 class="section-title">Orçamento selecionado</h2>
@@ -173,7 +87,127 @@
           <p>Após criar um orçamento, escolha um registro da lista para acompanhar o realizado.</p>
         </div>
       <% } %>
-    </article>
+  </section>
+
+  <section class="surface form-card" id="budgetFormSection" style="margin-bottom: 2rem;">
+    <div class="page-heading">
+      <span class="eyebrow">Novo orçamento</span>
+      <h2 class="section-title">Cadastrar orçamento mensal</h2>
+    </div>
+
+    <% if (!categories.length) { %>
+      <div class="empty-state" style="margin-bottom: 1rem;">
+        <h3>Nenhuma categoria de despesa ativa</h3>
+        <p>Crie categorias de despesa antes de registrar um orçamento por categoria.</p>
+        <a class="btn btn--primary" href="/categorias">Ir para categorias</a>
+      </div>
+    <% } %>
+
+    <form class="form-grid" method="post" action="/orcamento">
+      <label class="field">
+        <span>Mês</span>
+        <input type="month" name="month" value="<%= values.month || '' %>" required />
+        <%- include('partials/field-errors', { errors, field: 'month' }) %>
+      </label>
+
+
+      <div class="surface" style="padding: 1rem; border-radius: var(--radius-md); background: rgba(255,255,255,0.78); border: 1px solid var(--line);">
+        <div class="page-heading" style="margin-bottom: 1rem;">
+          <span class="eyebrow">Categorias</span>
+          <h3 class="section-title" style="margin: 0;">Distribuição orçamentária</h3>
+        </div>
+
+        <div class="grid-2" style="gap: 0.85rem;">
+          <% 
+            // Ordena as categorias por label (pt-BR)
+            const sortedCategories = [...categories].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+            // Garante que values.categories tenha o mesmo tamanho das categorias cadastradas
+            const filledValues = (values.categories && Array.isArray(values.categories)) ? [...values.categories] : [];
+            while (filledValues.length < sortedCategories.length) {
+              filledValues.push({});
+            }
+            sortedCategories.forEach(function(category, index) {
+              const item = filledValues[index] || {};
+          %>
+            <label class="field">
+              <span>Categoria <%= index + 1 %></span>
+              <select name="categories[<%= index %>][category_id]">
+                <option value="">Selecione</option>
+                <option value="<%= category.id %>" selected><%= category.label %></option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Valor</span>
+              <input type="text" class="budget-amount-input" name="categories[<%= index %>][budgeted_amount]" value="<%= item.budgeted_amount || '' %>" placeholder="0,00" />
+            </label>
+          <% }); %>
+        </div>
+
+        <%- include('partials/field-errors', { errors, field: 'categories' }) %>
+      </div>
+
+      <button class="btn btn--primary" type="submit" <%= categories.length ? '' : 'disabled' %>>Salvar orçamento</button>
+    </form>
+
+    <script>
+      (function() {
+        const totalInput = document.getElementById('budgetTotalInput');
+        const amountInputs = document.querySelectorAll('.budget-amount-input');
+
+        function applyMask(input) {
+          input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length === 0) {
+              e.target.value = '';
+            } else {
+              value = (parseInt(value) / 100).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              });
+              e.target.value = value;
+            }
+          });
+        }
+
+        if (totalInput) {
+          applyMask(totalInput);
+        }
+
+        amountInputs.forEach(applyMask);
+
+        // Auto-fill categories in alphabetical order
+        const categorySelects = document.querySelectorAll('select[name*="categories"][name*="category_id"]');
+        if (categorySelects.length > 0) {
+          // Extract all available categories from the first select
+          const firstSelect = categorySelects[0];
+          const allCategories = Array.from(firstSelect.options)
+            .filter(option => option.value !== '') // Exclude empty option
+            .map(option => ({
+              id: option.value,
+              label: option.textContent
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+
+          let usedCategoryIds = new Set();
+
+          // Fill each select with the next available category in alphabetical order
+          categorySelects.forEach((select) => {
+            const currentValue = select.value;
+            if (currentValue) {
+              usedCategoryIds.add(currentValue);
+            }
+
+            // Find first available category not yet used
+            const nextCategory = allCategories.find(cat => !usedCategoryIds.has(cat.id));
+            if (nextCategory && !currentValue) {
+              select.value = nextCategory.id;
+              usedCategoryIds.add(nextCategory.id);
+            }
+          });
+        }
+      })();
+    </script>
   </section>
 
   <section class="surface table-card">
@@ -226,6 +260,21 @@
 
 <script>
   (function() {
+    // Scroll to budget form with ease-in animation
+    const scrollBtn = document.getElementById('scrollToBudgetFormBtn');
+    const budgetFormSection = document.getElementById('budgetFormSection');
+
+    if (scrollBtn && budgetFormSection) {
+      scrollBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        budgetFormSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
+    }
+
+    // Chart initialization
     const budgetCanvas = document.getElementById('budgetDetailChart');
     if (!budgetCanvas) {
       return;
