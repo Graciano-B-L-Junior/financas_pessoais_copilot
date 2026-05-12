@@ -1,84 +1,14 @@
-const nodeGlobals = {
-  Buffer: "readonly",
-  __dirname: "readonly",
-  __filename: "readonly",
-  clearImmediate: "readonly",
-  clearInterval: "readonly",
-  clearTimeout: "readonly",
-  console: "readonly",
-  exports: "readonly",
-  global: "readonly",
-  module: "readonly",
-  process: "readonly",
-  require: "readonly",
-  URLSearchParams: "readonly",
-  setImmediate: "readonly",
-  setInterval: "readonly",
-  setTimeout: "readonly",
-};
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
 
-const browserGlobals = {
-  document: "readonly",
-  location: "readonly",
-  navigator: "readonly",
-  window: "readonly",
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const jestGlobals = {
-  afterEach: "readonly",
-  beforeEach: "readonly",
-  describe: "readonly",
-  expect: "readonly",
-  it: "readonly",
-  jest: "readonly",
-  test: "readonly",
-};
+const compat = new FlatCompat({ baseDirectory: __dirname });
 
-module.exports = [
-  {
-    ignores: ["dist/**", "node_modules/**"],
-  },
-  {
-    files: ["src/public/js/**/*.js"],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "script",
-      globals: browserGlobals,
-    },
-    rules: {
-      "no-console": "off",
-      "no-undef": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-    },
-  },
-  {
-    files: ["**/*.test.js"],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "commonjs",
-      globals: {
-        ...nodeGlobals,
-        ...jestGlobals,
-      },
-    },
-    rules: {
-      "no-console": "off",
-      "no-undef": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-    },
-  },
-  {
-    files: ["**/*.js"],
-    ignores: ["src/public/js/**/*.js", "**/*.test.js"],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "commonjs",
-      globals: nodeGlobals,
-    },
-    rules: {
-      "no-console": "off",
-      "no-undef": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-    },
-  },
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
+
+export default eslintConfig;

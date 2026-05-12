@@ -1,6 +1,6 @@
 ---
 name: aplicacao-financas-instructions
-description: "Instruções de projeto para o agente — aplicação web de finanças pessoais (backend: Django+DRF, frontend: Node.js + Express com JavaScript puro)."
+description: "Instruções de projeto para o agente — aplicação web de finanças pessoais (backend: Django+DRF, frontend: Next.js com React)."
 applyTo: "**"
 ---
 
@@ -44,7 +44,7 @@ Requisitos funcionais (resumo)
 Requisitos não funcionais
 - **Backend:** Django + Django REST Framework.
 - **Autenticação:** JWT (access + refresh). Indicar estratégia segura para armazenamento do token.
-- **Frontend:** Node.js com Express e JavaScript puro.
+- **Frontend:** Next.js com React.
 - **Arquitetura:** seguir os princípios do 12-factor app (config via env, logs stdout, processos stateless, backing services como recursos anexáveis).
 - **CI/CD & Qualidade:** Jenkins para pipeline; integração com SonarQube para análise estática.
 
@@ -63,19 +63,21 @@ Diretivas de implementação (backend)
 - Recorrência: lançamentos recorrentes devem ser compatíveis com Celery + Redis; se isso não estiver disponível no ambiente, documentar a alternativa com cron job antes de implementar.
 
 Diretivas de implementação (frontend)
-- Estrutura: aplicação Node.js com Express e JavaScript puro.
-- Organização obrigatória: rotas, controllers, services, middlewares e views quando necessário.
-- Não usar TypeScript, React ou Next.js neste projeto.
-- Autenticação: usar cookies `HttpOnly` quando a implementação depender de sessão/token no navegador.
-- Consumo de API: usar `fetch` ou `axios` em JavaScript puro.
-- Proteção de rotas: usar middlewares do Express para validar autenticação e autorização.
-- Interface: usar HTML, CSS e JavaScript puro; renderizar páginas pelo Express quando o módulo exigir interface server-side.
+- Framework: Next.js com React (versão 13+, preferindo App Router quando aplicável).
+- Linguagem: TypeScript é recomendado para melhor tipagem e qualidade de código.
+- Organização obrigatória: componentes reutilizáveis, hooks customizados, serviços de API, layout e páginas conforme estrutura do Next.js.
+- Autenticação: usar cookies `HttpOnly` para armazenar JWT; implementar middleware do Next.js para validação em rotas protegidas.
+- Consumo de API: usar `fetch` nativo, `axios` ou bibliotecas como `SWR`/`React Query` para gerenciamento de estado assíncrono.
+- Proteção de rotas: usar middleware do Next.js para validar autenticação e redirecionamento; proteger endpoints da API com middlewares.
+- Interface: usar React com componentes reutilizáveis, CSS Modules ou bibliotecas como Tailwind CSS, seguindo boas práticas de UX e acessibilidade.
+- Renderização: aproveitar Server Components do Next.js quando apropriado para melhor performance e SEO.
 
 Tarefa agendada e processamento de recorrentes
 - Preferência por Celery + Redis como worker para gerar lançamentos recorrentes e enviar notificações. Se ambiente mais simples, documentar uma alternativa baseada em cron jobs.
 
 CI/CD e Qualidade
 - Jenkins pipeline deve executar: lint (backend: flake8/isort/black; frontend: eslint/prettier), testes unitários, build frontend, análise SonarQube, publishing de imagem Docker se aprovado.
+- Frontend: executar build Next.js (`next build`) e testes de componentes com Jest/React Testing Library.
 - Pipeline de PR: rodar testes e analysis; bloqueio de merge em qualidade insuficiente.
 
 Observabilidade e Deploy
@@ -85,9 +87,9 @@ Observabilidade e Deploy
 - Manter processos stateless sempre que possível.
 
 Práticas de codificação e revisão
-- Tests: backend com pytest-django, cobertura mínima 80% em módulos críticos; frontend com Jest e Supertest.
+- Tests: backend com pytest-django, cobertura mínima 80% em módulos críticos; frontend com Jest e React Testing Library, cobertura mínima 75% em componentes críticos.
 - Commits: mensagens curtas e descritivas; seguir convenção `feat/bugfix/docs` no título.
-- Documentação mínima: README com como rodar localmente, endpoints importantes e variáveis de ambiente essenciais.
+- Documentação mínima: README com como rodar localmente (incluindo `npm install` e `npm run dev`), endpoints importantes e variáveis de ambiente essenciais.
 - Specs: qualquer mudança em endpoint, regra de negócio, payload, filtro, resposta ou fluxo deve ser refletida no arquivo de spec correspondente.
 
 Regras de contrato de API
@@ -106,14 +108,15 @@ Exemplos de endpoints recomendados (REST)
 
 Exemplos de prompts para o agente
 - "Implemente o endpoint `POST /api/v1/transactions/` no Django + DRF de acordo com a spec003, incluindo validações e testes."
-- "Crie a rota Express do dashboard conforme a spec004, com filtros e resposta JSON compatível com a especificação."
+- "Crie a página do dashboard no Next.js conforme a spec004, com filtros e consumo da API REST compatível com a especificação, incluindo testes de componentes."
 
 Regras fixas do projeto
-- Frontend somente com Node.js, Express e JavaScript puro.
-- Não usar TypeScript, React nem Next.js.
+- Frontend obrigatoriamente com Next.js e React.
+- Backend exclusivamente em Django + DRF.
 - Banco de dados definitivo: PostgreSQL.
 - Tokens: preferir cookies `HttpOnly`.
 - Recorrentes: usar Celery + Redis quando disponível.
 - Locale e moeda: português do Brasil e BRL.
+- Tipo e validações: usar TypeScript no frontend para melhor segurança de tipos.
 
 ---

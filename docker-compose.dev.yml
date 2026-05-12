@@ -73,10 +73,12 @@ services:
       - ./frontend/.env.dev
     volumes:
       - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     ports:
       - "3000:3000"
       - "9229:9229"
-    command: node --inspect=0.0.0.0:9229 src/server.js
+    command: npm run dev:debug
     depends_on:
       - backend
 
