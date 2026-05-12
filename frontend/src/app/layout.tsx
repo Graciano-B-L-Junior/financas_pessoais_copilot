@@ -15,14 +15,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <head>
-        <Script
-          src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
-          strategy="beforeInteractive"
-        />
-      </head>
+      <head />
       <body>
         {children}
+        {/* Carregado após hidratação — não bloqueia rendering/hydration */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+          strategy="afterInteractive"
+        />
         <Script src="/js/app.js" strategy="afterInteractive" />
       </body>
     </html>

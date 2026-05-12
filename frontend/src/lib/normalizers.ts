@@ -1,4 +1,4 @@
-import type { FormErrors } from "@/types";
+import type { FormErrors, PaginationMetadata } from "@/types";
 
 export function normalizeItem<T extends object>(payload: unknown): T {
   if (!payload || typeof payload !== "object") return (payload ?? {}) as T;
@@ -18,6 +18,27 @@ export function normalizeList<T>(payload: unknown): T[] {
   if (Array.isArray(p.data)) return p.data as T[];
   if (Array.isArray(p.items)) return p.items as T[];
   return [];
+}
+
+export function extractPagination(
+  payload: unknown
+): PaginationMetadata | null {
+  if (!payload || typeof payload !== "object") return null;
+  const p = payload as Record<string, unknown>;
+  
+  if (
+    typeof p.count === "number" &&
+    (p.next === null || typeof p.next === "string") &&
+    (p.previous === null || typeof p.previous === "string")
+  ) {
+    return {
+      count: p.count,
+      next: p.next as string | null,
+      previous: p.previous as string | null,
+    };
+  }
+  
+  return null;
 }
 
 function flattenMessages(value: unknown): string[] {

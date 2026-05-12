@@ -1,7 +1,11 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { env } from "@/config/env";
 
 const BASE_URL = env.backendApiUrl;
+
+// Resolvida uma vez por request — evita múltiplos await cookies() na mesma renderização
+const getCookieStore = cache(() => cookies());
 
 interface RequestOptions {
   method?: string;
@@ -11,7 +15,7 @@ interface RequestOptions {
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
+  const cookieStore = await getCookieStore();
   const access = cookieStore.get("access_token")?.value;
   const refresh = cookieStore.get("refresh_token")?.value;
 
@@ -30,8 +34,10 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   };
 }
 
-async function attemptRefresh(): Promise<string | null> {
-  const cookieStore = await cookies();
+// Cached por request — garante apenas uma chamada HTTP a /auth/refresh/
+// mesmo quando múltiplos fetches paralelos recebem 401 no mesmo ciclo de render
+const attemptRefresh = cache(async (): Promise<string | null> => {
+  const cookieStore = await getCookieStore();
   const refresh = cookieStore.get("refresh_token")?.value;
   if (!refresh) return null;
 
@@ -46,7 +52,7 @@ async function attemptRefresh(): Promise<string | null> {
 
   const data = await res.json().catch(() => null);
   return data?.access ?? null;
-}
+});
 
 export async function apiRequest<T = unknown>(
   path: string,
@@ -122,7 +128,8 @@ export const api = {
       }),
   },
   profile: {
-    get: () => apiRequest("/profile/"),
+    // Deduplicado por request: ProtectedLayout e PerfilPage compartilham um único fetch
+    get: cache(() => apiRequest("/profile/")),
     update: (data: unknown) => apiRequest("/profile/", { method: "PATCH", data }),
   },
   categories: {

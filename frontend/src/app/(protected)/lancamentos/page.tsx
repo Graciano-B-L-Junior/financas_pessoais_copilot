@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { consumeFlash } from "@/lib/session";
-import { normalizeList } from "@/lib/normalizers";
+import { normalizeList, extractPagination } from "@/lib/normalizers";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { Flash } from "@/components/ui/Flash";
+import { Pagination } from "@/components/ui/Pagination";
 import { TransactionForm } from "@/components/forms/TransactionForm";
 import { deleteTransactionAction } from "@/app/actions/transactions";
 import type { Category, Transaction } from "@/types";
@@ -18,7 +19,10 @@ interface SearchParams {
   category?: string;
   type?: string;
   is_recurring?: string;
+  page?: string;
 }
+
+const PAGE_SIZE = 20;
 
 export default async function LancamentosPage({
   searchParams,
@@ -26,31 +30,67 @@ export default async function LancamentosPage({
   searchParams: Promise<SearchParams>;
 }) {
   const query = await searchParams;
+  
+  // Validar página: deve ser >= 1
+  let page = 1;
+  if (query.page) {
+    const parsed = parseInt(query.page, 10);
+    if (!isNaN(parsed) && parsed >= 1) {
+      page = parsed;
+    } else if (query.page && !isNaN(parseInt(query.page, 10))) {
+      // Se a página é inválida (< 1), redirecionar para página 1 mantendo outros filtros
+      const params = new URLSearchParams();
+      if (query.start) params.set("start", query.start);
+      if (query.end) params.set("end", query.end);
+      if (query.category) params.set("category", query.category);
+      if (query.type) params.set("type", query.type);
+      if (query.is_recurring) params.set("is_recurring", query.is_recurring);
+      redirect(`/lancamentos${params.toString() ? "?" + params.toString() : ""}`);
+    }
+  }
+
   const params: Record<string, string | undefined> = {
     start: query.start || undefined,
     end: query.end || undefined,
     category: query.category || undefined,
     type: query.type || undefined,
     is_recurring: query.is_recurring || undefined,
+    page: String(page),
   };
 
-  const [transactionsRes, allCategoriesRes, activeCategoriesRes] =
+  const [transactionsRes, categoriesRes] =
     await Promise.all([
       api.transactions.list(params),
       api.categories.list({}),
-      api.categories.list({ is_active: "true" }),
     ]);
 
   if ([401, 403].includes(transactionsRes.status)) redirect("/login");
 
   const flash = await consumeFlash();
   const transactions = normalizeList<Transaction>(transactionsRes.data);
-  const allCategories = normalizeList<Category>(allCategoriesRes.data).map(
+  const paginationMeta = extractPagination(transactionsRes.data);
+  
+  // Calcular metadata de paginação
+  const totalCount = paginationMeta?.count || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const hasNext = paginationMeta?.next !== null;
+  const hasPrevious = paginationMeta?.previous !== null;
+
+  const allCategories = normalizeList<Category>(categoriesRes.data).map(
     (c) => ({ ...c, label: c.is_active ? c.name : `${c.name} (inativa)` })
   );
-  const activeCategories = normalizeList<Category>(activeCategoriesRes.data).map(
-    (c) => ({ ...c, label: c.name })
-  );
+  const activeCategories = normalizeList<Category>(categoriesRes.data)
+    .filter((c) => c.is_active)
+    .map((c) => ({ ...c, label: c.name }));
+
+  // Preservar query params para Pagination component
+  const paginationSearchParams: Record<string, string | undefined> = {
+    start: query.start,
+    end: query.end,
+    category: query.category,
+    type: query.type,
+    is_recurring: query.is_recurring,
+  };
 
   return (
     <main className="container page-shell shell-grid">
@@ -62,7 +102,10 @@ export default async function LancamentosPage({
             Registre receitas, despesas e recorrencias com filtros de periodo e
             categoria.
           </p>
-          <div className="chip">{transactions.length} registros</div>
+          <div className="chip">
+            {totalCount} {totalCount === 1 ? "registro" : "registros"} •{" "}
+            {totalPages > 1 && `Página ${page} de ${totalPages}`}
+          </div>
         </div>
 
         <Flash flash={flash} />
@@ -131,52 +174,80 @@ export default async function LancamentosPage({
           </div>
 
           {transactions.length ? (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Descricao</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Recorrente</th>
-                    <th>Acoes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((t) => (
-                    <tr key={t.id}>
-                      <td>{formatDate(t.date)}</td>
-                      <td>{t.description}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            t.type === "receita"
-                              ? "badge--success"
-                              : "badge--danger"
-                          }`}
-                        >
-                          {t.type}
-                        </span>
-                      </td>
-                      <td>{formatCurrency(t.amount)}</td>
-                      <td>{t.is_recurring ? "Sim" : "Nao"}</td>
-                      <td>
-                        <div className="table-actions">
-                          <Link
-                            className="btn btn--ghost"
-                            href={`/lancamentos/${t.id}`}
-                          >
-                            Editar
-                          </Link>
-                          <DeleteTransactionForm id={t.id} />
-                        </div>
-                      </td>
+            <>
+              {totalPages > 1 && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  pageSize={PAGE_SIZE}
+                  hasNext={hasNext}
+                  hasPrevious={hasPrevious}
+                  pathname="/lancamentos"
+                  searchParams={paginationSearchParams}
+                />
+              )}
+
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Descricao</th>
+                      <th>Tipo</th>
+                      <th>Valor</th>
+                      <th>Recorrente</th>
+                      <th>Acoes</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t) => (
+                      <tr key={t.id}>
+                        <td>{formatDate(t.date)}</td>
+                        <td>{t.description}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              t.type === "receita"
+                                ? "badge--success"
+                                : "badge--danger"
+                            }`}
+                          >
+                            {t.type}
+                          </span>
+                        </td>
+                        <td>{formatCurrency(t.amount)}</td>
+                        <td>{t.is_recurring ? "Sim" : "Nao"}</td>
+                        <td>
+                          <div className="table-actions">
+                            <Link
+                              className="btn btn--ghost"
+                              href={`/lancamentos/${t.id}`}
+                            >
+                              Editar
+                            </Link>
+                            <DeleteTransactionForm id={t.id} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  pageSize={PAGE_SIZE}
+                  hasNext={hasNext}
+                  hasPrevious={hasPrevious}
+                  pathname="/lancamentos"
+                  searchParams={paginationSearchParams}
+                />
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <h3>Nenhum lancamento encontrado</h3>

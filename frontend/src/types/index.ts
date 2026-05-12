@@ -152,6 +152,18 @@ export interface ApiResponse<T = unknown> {
   data: T | null;
 }
 
+// ─── Paginação ────────────────────────────────────────────
+export interface PaginationMetadata {
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+export interface PaginatedResponse<T> {
+  results: T[];
+  pagination: PaginationMetadata;
+}
+
 export interface ApiError {
   status: number;
   status_text?: string;
