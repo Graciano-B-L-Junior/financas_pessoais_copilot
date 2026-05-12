@@ -18,10 +18,11 @@ export default function RootLayout({
       <head />
       <body>
         {children}
-        {/* Carregado após hidratação — não bloqueia rendering/hydration */}
+        {/* Chart.js CDN — app.js depende dele, carregado com onLoad */}
         <Script
           src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
           strategy="afterInteractive"
+          id="chartjs-cdn"
         />
         <Script src="/js/app.js" strategy="afterInteractive" />
       </body>

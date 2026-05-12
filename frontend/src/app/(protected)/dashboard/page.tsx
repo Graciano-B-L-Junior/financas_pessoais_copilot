@@ -208,7 +208,9 @@ export default async function DashboardPage({
           </div>
           {monthlySeries.length > 0 ? (
             <>
-              <canvas id="monthlyChart" />
+              <div style={{ position: "relative", height: "320px", width: "100%" }}>
+                <canvas id="monthlyChart" />
+              </div>
               <script
                 id="monthlySeriesData"
                 type="application/json"
@@ -232,7 +234,9 @@ export default async function DashboardPage({
           </div>
           {budgetSeries.length > 0 ? (
             <>
-              <canvas id="budgetChart" />
+              <div style={{ position: "relative", height: "320px", width: "100%" }}>
+                <canvas id="budgetChart" />
+              </div>
               <script
                 id="budgetSeriesData"
                 type="application/json"
@@ -259,7 +263,9 @@ export default async function DashboardPage({
           </div>
           {topCategories.length > 0 ? (
             <>
-              <canvas id="categoriesChart" />
+              <div style={{ position: "relative", height: "320px", width: "100%" }}>
+                <canvas id="categoriesChart" />
+              </div>
               <script
                 id="topCategoriesData"
                 type="application/json"

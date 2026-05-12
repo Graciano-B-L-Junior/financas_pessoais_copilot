@@ -877,6 +877,13 @@ button.btn:hover,
 }
 
 /* Charts layout */
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -900,6 +907,10 @@ button.btn:hover,
 }
 
 @media (max-width: 1024px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+
   .charts-grid {
     grid-template-columns: 1fr;
   }

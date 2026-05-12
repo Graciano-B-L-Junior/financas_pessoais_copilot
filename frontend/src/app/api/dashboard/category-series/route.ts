@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const params: Record<string, string | undefined> = {
-    month: searchParams.get("month") || undefined,
+    category_id: searchParams.get("category_id") || undefined,
     start: searchParams.get("start") || undefined,
     end: searchParams.get("end") || undefined,
   };
