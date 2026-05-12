@@ -242,10 +242,16 @@ nav.site-actions {
 }
 
 
-.nav-links a:hover,
-.nav-links a.is-active {
+.nav-links a:hover {
   color: var(--ink);
   background: rgba(37, 99, 235, 0.09);
+}
+
+.nav-links a.is-active {
+  color: var(--ink);
+  background: rgba(37, 99, 235, 0.15);
+  border-bottom: 2px solid var(--primary);
+  font-weight: 600;
 }
 
 @media (max-width: 1024px) {

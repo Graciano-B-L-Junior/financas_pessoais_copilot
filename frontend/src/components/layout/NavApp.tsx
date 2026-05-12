@@ -34,36 +34,42 @@ export function NavApp({ currentUser, currentPath }: Props) {
           <Link
             className={isActivePath(currentPath, "/dashboard") ? "is-active" : ""}
             href="/dashboard"
+            aria-current={isActivePath(currentPath, "/dashboard") ? "page" : undefined}
           >
             Dashboard
           </Link>
           <Link
             className={isActivePath(currentPath, "/categorias") ? "is-active" : ""}
             href="/categorias"
+            aria-current={isActivePath(currentPath, "/categorias") ? "page" : undefined}
           >
             Categorias
           </Link>
           <Link
             className={isActivePath(currentPath, "/lancamentos") ? "is-active" : ""}
             href="/lancamentos"
+            aria-current={isActivePath(currentPath, "/lancamentos") ? "page" : undefined}
           >
             Lancamentos
           </Link>
           <Link
             className={isActivePath(currentPath, "/orcamento") ? "is-active" : ""}
             href="/orcamento"
+            aria-current={isActivePath(currentPath, "/orcamento") ? "page" : undefined}
           >
             Orcamento
           </Link>
           <Link
             className={isActivePath(currentPath, "/perfil") ? "is-active" : ""}
             href="/perfil"
+            aria-current={isActivePath(currentPath, "/perfil") ? "page" : undefined}
           >
             Perfil
           </Link>
           <Link
             className={isActivePath(currentPath, "/analises") ? "is-active" : ""}
             href="/analises"
+            aria-current={isActivePath(currentPath, "/analises") ? "page" : undefined}
           >
             Analises
           </Link>
