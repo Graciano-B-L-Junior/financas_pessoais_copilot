@@ -1,11 +1,33 @@
-from django.db.models import Count, Q, Sum
-from django.db.models.functions import TruncMonth
+from calendar import monthrange
+from datetime import date, timedelta
+from decimal import Decimal
+
+from django.db.models import Q, Sum
+from django.db.models.functions import TruncDay, TruncMonth
+from django.utils.dateparse import parse_date
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.budgets.models import Budget
+from apps.categories.models import Category
 from apps.transactions.models import Transaction
+
+
+def _month_bounds(month_value):
+    parsed_month = parse_date(f"{month_value}-01") if len(month_value) == 7 else parse_date(month_value)
+    if not parsed_month:
+        return None
+
+    month_start = date(parsed_month.year, parsed_month.month, 1)
+    month_end = date(parsed_month.year, parsed_month.month, monthrange(parsed_month.year, parsed_month.month)[1])
+    return month_start, month_end
+
+
+def _to_float(value):
+    if value is None:
+        return 0.0
+    return float(value)
 
 
 class DashboardView(APIView):
@@ -120,15 +142,19 @@ class CategorySeriesView(APIView):
     
     Query params:
     - category_id: ID da categoria (obrigatório)
+    - granularity: monthly ou daily
     - start: Data de início (YYYY-MM-DD)
     - end: Data de fim (YYYY-MM-DD)
+    - month: Mês selecionado para visão diária (YYYY-MM)
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         category_id = request.query_params.get("category_id")
+        granularity = request.query_params.get("granularity", "monthly")
         start = request.query_params.get("start")
         end = request.query_params.get("end")
+        month = request.query_params.get("month")
 
         if not category_id:
             return Response(
@@ -141,34 +167,166 @@ class CategorySeriesView(APIView):
                 status=400,
             )
 
+        if granularity not in {"monthly", "daily"}:
+            return Response(
+                {
+                    "status": 400,
+                    "status_text": "Bad Request",
+                    "message": "granularity must be monthly or daily",
+                    "category_series": [],
+                },
+                status=400,
+            )
+
+        category = Category.objects.filter(
+            id=category_id,
+            user=request.user,
+            type=Category.TYPE_EXPENSE,
+        ).first()
+
+        if not category:
+            return Response(
+                {
+                    "status": 404,
+                    "status_text": "Not Found",
+                    "message": "Categoria não encontrada",
+                    "category_series": [],
+                },
+                status=404,
+            )
+
         queryset = Transaction.objects.filter(
             user=request.user,
-            category_id=category_id
+            category=category,
+            type=Category.TYPE_EXPENSE,
+            is_active=True,
         )
 
-        if start:
-            queryset = queryset.filter(date__gte=start)
-        if end:
-            queryset = queryset.filter(date__lte=end)
+        category_series = []
+        budget_series = []
+        budget_reference = None
 
-        # Group by month and sum amounts
-        monthly_data = queryset.annotate(month=TruncMonth("date")).values("month").annotate(
-            total=Sum("amount")
-        ).order_by("month")
+        if granularity == "daily":
+            if not month:
+                return Response(
+                    {
+                        "status": 400,
+                        "status_text": "Bad Request",
+                        "message": "month is required for daily granularity",
+                        "category_series": [],
+                    },
+                    status=400,
+                )
 
-        category_series = [
-            {
-                "month": item["month"].strftime("%Y-%m") if item["month"] else None,
-                "total": float(item["total"] or 0),
-            }
-            for item in monthly_data
-        ]
+            month_bounds = _month_bounds(month)
+            if not month_bounds:
+                return Response(
+                    {
+                        "status": 400,
+                        "status_text": "Bad Request",
+                        "message": "month must be a valid YYYY-MM value",
+                        "category_series": [],
+                    },
+                    status=400,
+                )
+
+            month_start, month_end = month_bounds
+            queryset = queryset.filter(date__range=(month_start, month_end))
+
+            daily_totals = {}
+            for item in queryset.annotate(period=TruncDay("date")).values("period").annotate(total=Sum("amount")):
+                period = item["period"]
+                period_key = period.date() if hasattr(period, "date") else period
+                daily_totals[period_key] = item["total"] or Decimal("0")
+
+            budget = (
+                Budget.objects.filter(user=request.user, month=month_start, categories__category=category)
+                .prefetch_related("categories__category")
+                .first()
+            )
+            if budget:
+                budget_category = budget.categories.filter(category=category).first()
+                if budget_category:
+                    budget_reference = {
+                        "month": budget.month.strftime("%Y-%m"),
+                        "category_id": category.id,
+                        "category_name": category.name,
+                        "budgeted_amount": _to_float(budget_category.budgeted_amount),
+                    }
+
+            current_day = month_start
+            while current_day <= month_end:
+                actual_total = _to_float(daily_totals.get(current_day, Decimal("0")))
+                category_series.append(
+                    {
+                        "label": current_day.isoformat(),
+                        "total": actual_total,
+                    }
+                )
+                if budget_reference:
+                    budget_series.append(
+                        {
+                            "label": current_day.isoformat(),
+                            "total": budget_reference["budgeted_amount"],
+                        }
+                    )
+                current_day += timedelta(days=1)
+        else:
+            if start:
+                queryset = queryset.filter(date__gte=start)
+            if end:
+                queryset = queryset.filter(date__lte=end)
+
+            monthly_data = (
+                queryset.annotate(period=TruncMonth("date")).values("period").annotate(total=Sum("amount")).order_by("period")
+            )
+
+            month_labels = []
+            for item in monthly_data:
+                period = item["period"]
+                if not period:
+                    continue
+
+                month_label = period.strftime("%Y-%m")
+                month_labels.append(date(period.year, period.month, 1))
+                category_series.append(
+                    {
+                        "label": month_label,
+                        "total": _to_float(item["total"]),
+                    }
+                )
+
+            budgets = (
+                Budget.objects.filter(user=request.user, month__in=month_labels, categories__category=category)
+                .prefetch_related("categories__category")
+                .order_by("month")
+            )
+            budget_map = {}
+            for budget in budgets:
+                budget_category = budget.categories.filter(category=category).first()
+                if budget_category:
+                    budget_map[budget.month.strftime("%Y-%m")] = _to_float(budget_category.budgeted_amount)
+
+            budget_series = [
+                {
+                    "label": item["label"],
+                    "total": budget_map.get(item["label"]),
+                }
+                for item in category_series
+            ]
 
         return Response(
             {
                 "status": 200,
                 "status_text": "OK",
+                "granularity": granularity,
+                "category": {
+                    "id": category.id,
+                    "name": category.name,
+                },
+                "budget": budget_reference,
                 "category_series": category_series,
+                "budget_series": budget_series,
             }
         )
 

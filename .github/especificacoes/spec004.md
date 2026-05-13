@@ -35,6 +35,7 @@ Este módulo cobre a exibição de totais, resumos e listas agregadas de receita
 - **RF004** Exibir totais por categoria.
 - **RF005** Permitir aplicação de filtros combinados.
 - **RF006** Disponibilizar dados para gráficos de evolução temporal.
+- **RF007** Permitir visualização da evolução de uma categoria em granularidade mensal ou diária, com referência ao orçamento mensal quando existir para a categoria selecionada.
 
 ## 6. Requisitos Não Funcionais
 - **RNF001** O módulo deve ser implementado com Django REST Framework.
@@ -121,6 +122,46 @@ Este módulo cobre a exibição de totais, resumos e listas agregadas de receita
     "end": ["Data final inválida."],
     "non_field_errors": ["O período inicial deve ser menor ou igual ao período final."]
   }
+}
+```
+
+### 9.3 Evolução por categoria
+- **Endpoint** `GET /api/v1/dashboard/category-series/`
+- **Objetivo**: retornar a evolução de gastos de uma categoria com opção de visão mensal ou diária.
+- **Query params opcionais**:
+  - `category_id` (obrigatório)
+  - `granularity` (`monthly` ou `daily`)
+  - `start`
+  - `end`
+  - `month` (obrigatório quando `granularity=daily`)
+- **Resposta de sucesso**:
+```json
+{
+  "status": 200,
+  "status_text": "OK",
+  "granularity": "daily",
+  "category": {
+    "id": 1,
+    "name": "Alimentação"
+  },
+  "budget": {
+    "month": "2026-05",
+    "category_id": 1,
+    "category_name": "Alimentação",
+    "budgeted_amount": 1200.00
+  },
+  "category_series": [
+    {
+      "label": "2026-05-01",
+      "total": 80.00
+    }
+  ],
+  "budget_series": [
+    {
+      "label": "2026-05-01",
+      "total": 1200.00
+    }
+  ]
 }
 ```
 

@@ -115,6 +115,31 @@ export interface BudgetSeries {
   actual: number;
 }
 
+export type CategorySeriesGranularity = "monthly" | "daily";
+
+export interface CategoryEvolutionPoint {
+  label: string;
+  total: number | null;
+}
+
+export interface CategoryEvolutionBudget {
+  month: string;
+  category_id: number;
+  category_name: string;
+  budgeted_amount: number;
+}
+
+export interface CategoryEvolutionResponse {
+  granularity: CategorySeriesGranularity;
+  category: {
+    id: number;
+    name: string;
+  };
+  budget: CategoryEvolutionBudget | null;
+  category_series: CategoryEvolutionPoint[];
+  budget_series?: CategoryEvolutionPoint[];
+}
+
 export interface Dashboard {
   summary: DashboardSummary;
   budget_summary?: BudgetSummary;

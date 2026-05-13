@@ -736,7 +736,7 @@ button.btn:hover,
 }
 
 .metric-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .metric {
@@ -747,7 +747,7 @@ button.btn:hover,
 }
 
 .metric-value {
-  font-size: clamp(10px, 15px, 20px);
+  font-size: clamp(1rem, 1.8vw, 1.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   color: var(--ink);
@@ -904,6 +904,10 @@ button.btn:hover,
   flex-direction: column;
 }
 
+.chart-card--wide {
+  grid-column: 1 / -1;
+}
+
 .chart-card .page-heading {
   margin-bottom: 1rem;
 }
@@ -915,6 +919,10 @@ button.btn:hover,
 @media (max-width: 1024px) {
   .charts-section {
     grid-template-columns: 1fr;
+  }
+
+  .chart-card--wide {
+    grid-column: auto;
   }
 
   .charts-grid {
@@ -1095,10 +1103,13 @@ button.btn:hover,
   .auth-layout,
   .grid-2,
   .feature-grid,
-  .metric-grid,
   .grid-3,
   .grid-4 {
     grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .page-heading {
@@ -1122,6 +1133,10 @@ button.btn:hover,
 
   .page-shell {
     padding-top: 0.75rem;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero h1 {

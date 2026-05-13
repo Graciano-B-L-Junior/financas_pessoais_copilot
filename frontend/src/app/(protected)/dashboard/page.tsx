@@ -38,6 +38,7 @@ export default async function DashboardPage({
 }) {
   const query = await searchParams;
   const params = dashboardQuery(query);
+  const currentMonth = new Date().toISOString().slice(0, 7);
 
   const [dashboardRes, categoriesRes, transactionsRes] = await Promise.all([
     api.dashboard.get(params),
@@ -53,6 +54,7 @@ export default async function DashboardPage({
     ...c,
     label: c.is_active ? c.name : `${c.name} (inativa)`,
   }));
+  const expenseCategories = categories.filter((category) => category.type === "despesa");
   const recentTransactions = normalizeList<Transaction>(transactionsRes.data).slice(0, 6);
 
   const monthlySeries = dashboard.monthly_series || [];
@@ -285,30 +287,46 @@ export default async function DashboardPage({
           )}
         </article>
 
-        <article className="surface chart-card">
+        <article className="surface chart-card chart-card--wide">
           <div className="page-heading">
             <span className="eyebrow">Detalhado</span>
             <h2 className="section-title">Evolução por categoria</h2>
           </div>
-          <label
-            className="field search-field"
-            style={{ marginBottom: "var(--spacing-md, 1rem)" }}
-          >
-            <span>Selecione uma categoria</span>
-            <select
-              id="categoryFilterSelect"
-              name="category-evolution-filter"
+          <div className="filters" style={{ marginBottom: "var(--spacing-md, 1rem)" }}>
+            <label className="field search-field search-field--narrow">
+              <span>Granularidade</span>
+              <select id="categoryEvolutionGranularity" name="category-evolution-granularity">
+                <option value="monthly">Mensal</option>
+                <option value="daily">Diária</option>
+              </select>
+            </label>
+            <label
+              className="field search-field search-field--narrow"
+              id="categoryEvolutionMonthField"
+              style={{ display: "none" }}
             >
-              <option value="">
-                Escolha uma categoria para ver a evolução
-              </option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
+              <span>Mês</span>
+              <input
+                type="month"
+                id="categoryEvolutionMonth"
+                name="category-evolution-month"
+                defaultValue={currentMonth}
+              />
+            </label>
+            <label className="field search-field">
+              <span>Selecione uma categoria de despesa</span>
+              <select id="categoryFilterSelect" name="category-evolution-filter">
+                <option value="">
+                  Escolha uma categoria para ver a evolução
                 </option>
-              ))}
-            </select>
-          </label>
+                {expenseCategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div id="categoryEvolutionContainer" style={{ display: "none" }} />
         </article>
       </section>

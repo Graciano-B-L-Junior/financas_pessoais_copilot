@@ -161,23 +161,42 @@ function getChartConfig(type, data, label) {
   }
 
   if (type === "categoryEvolutionChart") {
+    const budgetValues = Array.isArray(data.budget) ? data.budget : [];
+    const hasBudget = budgetValues.some((value) => value !== null && value !== undefined);
     return {
       type: "line",
       data: {
-        labels: data.map((d) => d.month),
+        labels: data.labels || [],
         datasets: [
           {
-            label: label || "Evolução",
-            data: data.map((d) => d.total),
-            borderColor: colors.green,
-            backgroundColor: colors.greenAlpha,
+            label: label || "Gasto realizado",
+            data: data.actual || [],
+            borderColor: colors.red,
+            backgroundColor: colors.redAlpha,
             borderWidth: 2,
             tension: 0.4,
             fill: true,
             pointRadius: 5,
             pointHoverRadius: 7,
-            pointBackgroundColor: colors.green,
+            pointBackgroundColor: colors.red,
           },
+          ...(hasBudget
+            ? [
+                {
+                  label: "Orçamento",
+                  data: budgetValues,
+                  borderColor: colors.amber,
+                  backgroundColor: colors.amberAlpha,
+                  borderWidth: 2,
+                  borderDash: [6, 4],
+                  tension: 0.2,
+                  fill: false,
+                  pointRadius: 2,
+                  pointHoverRadius: 4,
+                  pointBackgroundColor: colors.amber,
+                },
+              ]
+            : []),
         ],
       },
       options: {
@@ -274,55 +293,101 @@ function initCharts() {
 function setupCategorySelect() {
   const categoryFilterSelect = document.getElementById("categoryFilterSelect");
   const container = document.getElementById("categoryEvolutionContainer");
+  const granularitySelect = document.getElementById("categoryEvolutionGranularity");
+  const monthField = document.getElementById("categoryEvolutionMonthField");
+  const monthInput = document.getElementById("categoryEvolutionMonth");
 
-  if (categoryFilterSelect && container) {
-    categoryFilterSelect.addEventListener("change", async (event) => {
-      const categoryId = event.target.value;
+  function syncGranularityField() {
+    if (!granularitySelect || !monthField) return;
+    monthField.style.display = granularitySelect.value === "daily" ? "flex" : "none";
+  }
 
-      if (!categoryId) {
+  async function loadCategoryEvolution() {
+    if (!categoryFilterSelect || !container) return;
+
+    const categoryId = categoryFilterSelect.value;
+    const granularity = granularitySelect ? granularitySelect.value : "monthly";
+    const month = monthInput ? monthInput.value : "";
+
+    if (!categoryId) {
+      container.style.display = "none";
+      return;
+    }
+
+    if (granularity === "daily" && !month) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center;"><p>Selecione um mês para visualizar a evolução diária.</p></div>';
+      container.style.display = "block";
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams();
+    params.set("category_id", categoryId);
+    params.set("granularity", granularity);
+
+    if (granularity === "daily") {
+      params.set("month", month);
+    } else {
+      if (url.searchParams.get("start")) params.set("start", url.searchParams.get("start"));
+      if (url.searchParams.get("end")) params.set("end", url.searchParams.get("end"));
+    }
+
+    try {
+      const response = await fetch(`/api/dashboard/category-series?${params.toString()}`);
+      if (!response.ok) {
+        console.error("Erro na chamada de category-series:", response.statusText);
         container.style.display = "none";
         return;
       }
 
-      // Extrair parâmetros da URL
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams();
-      params.set("category_id", categoryId);
-      if (url.searchParams.get("start")) params.set("start", url.searchParams.get("start"));
-      if (url.searchParams.get("end")) params.set("end", url.searchParams.get("end"));
+      const data = await response.json();
 
-      try {
-        const response = await fetch(`/api/dashboard/category-series?${params.toString()}`);
-        if (!response.ok) {
-          console.error("Erro na chamada de category-series:", response.statusText);
-          container.style.display = "none";
-          return;
-        }
-        const data = await response.json();
-
-        if (!data.category_series || data.category_series.length === 0) {
-          container.innerHTML = '<div style="padding: 2rem; text-align: center;"><p>Sem dados para esta categoria.</p></div>';
-          container.style.display = "block";
-          return;
-        }
-
-        // Criar canvas dinamicamente
-        container.innerHTML = '<canvas id="dynamicCategoryChart"></canvas>';
+      if (!data.category_series || data.category_series.length === 0) {
+        container.innerHTML = '<div style="padding: 2rem; text-align: center;"><p>Sem dados para esta categoria.</p></div>';
         container.style.display = "block";
-
-        const selectedOption = categoryFilterSelect.options[categoryFilterSelect.selectedIndex].text;
-        const config = getChartConfig(
-          "categoryEvolutionChart",
-          data.category_series,
-          selectedOption
-        );
-        initChart("dynamicCategoryChart", config);
-      } catch (error) {
-        console.error("Erro ao carregar categoria-series:", error);
-        container.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;"><p>Erro ao carregar os dados.</p></div>';
-        container.style.display = "block";
+        return;
       }
-    });
+
+      const labels = data.category_series.map((item) => item.label);
+      const actual = data.category_series.map((item) => item.total);
+      const budget = Array.isArray(data.budget_series)
+        ? data.budget_series.map((item) => item.total)
+        : [];
+
+      container.innerHTML = '<div style="position: relative; height: 420px; width: 100%;"><canvas id="dynamicCategoryChart"></canvas></div>';
+      container.style.display = "block";
+
+      const selectedOption = categoryFilterSelect.options[categoryFilterSelect.selectedIndex].text;
+      const config = getChartConfig(
+        "categoryEvolutionChart",
+        {
+          labels,
+          actual,
+          budget,
+        },
+        `${selectedOption}${granularity === "daily" ? " - diário" : ""}`
+      );
+      initChart("dynamicCategoryChart", config);
+    } catch (error) {
+      console.error("Erro ao carregar category-series:", error);
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;"><p>Erro ao carregar os dados.</p></div>';
+      container.style.display = "block";
+    }
+  }
+
+  if (categoryFilterSelect && container) {
+    syncGranularityField();
+
+    categoryFilterSelect.addEventListener("change", loadCategoryEvolution);
+    if (granularitySelect) {
+      granularitySelect.addEventListener("change", async () => {
+        syncGranularityField();
+        await loadCategoryEvolution();
+      });
+    }
+    if (monthInput) {
+      monthInput.addEventListener("change", loadCategoryEvolution);
+    }
   }
 }
 

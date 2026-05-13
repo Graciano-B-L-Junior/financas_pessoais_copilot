@@ -65,6 +65,7 @@ Este módulo cobre a criação, atualização, consulta e acompanhamento de orç
 - **RF008** Receber alertas de limite orçamentário atingido ou ultrapassado.
 - **RF009** Finalizar orçamento mensal.
 - **RF010** Arquivar ou deletar orçamento.
+- **RF011** Disponibilizar o orçamento mensal da categoria como linha de referência em gráficos de evolução de gastos quando a categoria estiver vinculada ao orçamento do mês selecionado.
 
 ## 6. Requisitos Não Funcionais
 - **RNF001** O módulo deve ser implementado com Django REST Framework.

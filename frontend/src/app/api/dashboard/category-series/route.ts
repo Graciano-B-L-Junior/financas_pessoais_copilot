@@ -5,8 +5,10 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const params: Record<string, string | undefined> = {
     category_id: searchParams.get("category_id") || undefined,
+    granularity: searchParams.get("granularity") || undefined,
     start: searchParams.get("start") || undefined,
     end: searchParams.get("end") || undefined,
+    month: searchParams.get("month") || undefined,
   };
 
   const response = await api.dashboard.categorySeries(params);
