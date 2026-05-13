@@ -899,7 +899,7 @@ button.btn:hover,
 
 .chart-card {
   padding: 1.5rem;
-  min-height: 400px;
+  min-height: 550px;
   display: flex;
   flex-direction: column;
 }

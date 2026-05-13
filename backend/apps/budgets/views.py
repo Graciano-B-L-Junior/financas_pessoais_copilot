@@ -2,14 +2,22 @@ from django.db.models import Prefetch
 from django.utils.dateparse import parse_date
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Budget, BudgetCategory
 from .serializers import BudgetDetailSerializer, BudgetListSerializer
 
 
+class BudgetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class BudgetViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = BudgetPagination
 
     def get_queryset(self):
         queryset = Budget.objects.select_related("user").prefetch_related(

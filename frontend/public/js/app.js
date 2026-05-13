@@ -225,6 +225,54 @@ function getChartConfig(type, data, label) {
       },
     };
   }
+
+  if (type === "budgetDetailChart") {
+    return {
+      type: "bar",
+      data: {
+        labels: data.map((d) => d.category_name),
+        datasets: [
+          {
+            label: "Orçado",
+            data: data.map((d) => d.budgeted_amount),
+            backgroundColor: colors.blueAlpha,
+            borderColor: colors.blue,
+            borderWidth: 2,
+          },
+          {
+            label: "Realizado",
+            data: data.map((d) => d.actual_expenses),
+            backgroundColor: colors.amberAlpha,
+            borderColor: colors.amber,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function (value) {
+                return new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                  maximumFractionDigits: 0,
+                }).format(value);
+              },
+            },
+          },
+        },
+      },
+    };
+  }
 }
 
 function initChart(canvasId, config) {
@@ -285,6 +333,20 @@ function initCharts() {
       }
     } catch (e) {
       console.error("Erro ao inicializar gráfico de orçamento:", e);
+    }
+  }
+
+  // Budget detail (Categorias orçadas vs realizadas — página /orcamento)
+  const budgetDetailScriptEl = document.getElementById("budgetDetailData");
+  if (budgetDetailScriptEl) {
+    try {
+      const budgetDetail = JSON.parse(budgetDetailScriptEl.textContent);
+      if (Array.isArray(budgetDetail) && budgetDetail.length > 0) {
+        const config = getChartConfig("budgetDetailChart", budgetDetail);
+        initChart("budgetDetailChart", config);
+      }
+    } catch (e) {
+      console.error("Erro ao inicializar gráfico de detalhe de orçamento:", e);
     }
   }
 }
@@ -354,7 +416,7 @@ function setupCategorySelect() {
         ? data.budget_series.map((item) => item.total)
         : [];
 
-      container.innerHTML = '<div style="position: relative; height: 420px; width: 100%;"><canvas id="dynamicCategoryChart"></canvas></div>';
+      container.innerHTML = '<div style="position: relative; height: 520px; width: 100%;"><canvas id="dynamicCategoryChart"></canvas></div>';
       container.style.display = "block";
 
       const selectedOption = categoryFilterSelect.options[categoryFilterSelect.selectedIndex].text;

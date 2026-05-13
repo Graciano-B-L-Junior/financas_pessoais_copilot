@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { consumeFlash } from "@/lib/session";
-import { normalizeList, normalizeItem } from "@/lib/normalizers";
+import { normalizeList, normalizeItem, extractPagination } from "@/lib/normalizers";
 import { formatCurrency, formatPercent, currentMonthInput } from "@/lib/formatters";
 import { Flash } from "@/components/ui/Flash";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { Pagination } from "@/components/ui/Pagination";
 import {
   createBudgetAction,
   finalizeBudgetAction,
@@ -20,7 +21,10 @@ interface SearchParams {
   month?: string;
   status?: string;
   selected?: string;
+  page?: string;
 }
+
+const PAGE_SIZE = 10;
 
 export default async function OrcamentoPage({
   searchParams,
@@ -28,13 +32,21 @@ export default async function OrcamentoPage({
   searchParams: Promise<SearchParams>;
 }) {
   const query = await searchParams;
-  const params: Record<string, string | undefined> = {
-    month: query.month || undefined,
+
+  let page = 1;
+  if (query.page) {
+    const parsed = parseInt(query.page, 10);
+    if (!isNaN(parsed) && parsed >= 1) page = parsed;
+  }
+
+  const listParams: Record<string, string | undefined> = {
     status: query.status || undefined,
+    page: String(page),
+    page_size: String(PAGE_SIZE),
   };
 
   const [budgetsRes, categoriesRes] = await Promise.all([
-    api.budgets.list(params),
+    api.budgets.list(listParams),
     api.categories.list({ is_active: "true", type: "despesa" }),
   ]);
 
@@ -42,10 +54,25 @@ export default async function OrcamentoPage({
 
   const flash = await consumeFlash();
   const budgets = normalizeList<Budget>(budgetsRes.data);
+  const paginationMeta = extractPagination(budgetsRes.data);
+  const totalCount = paginationMeta?.count ?? budgets.length;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const hasNext = paginationMeta?.next !== null && paginationMeta !== null;
+  const hasPrevious = paginationMeta?.previous !== null && paginationMeta !== null;
   const categories = normalizeList<Category>(categoriesRes.data);
 
-  const selectedId = query.selected ? Number(query.selected) : budgets[0]?.id;
-  const selectedBudget = budgets.find((b) => b.id === selectedId) || null;
+  const selectedId = query.selected
+    ? Number(query.selected)
+    : query.month
+      ? (budgets.find((b) => b.month === query.month)?.id ?? budgets[0]?.id)
+      : budgets[0]?.id;
+  const selectedBudgetDetail = selectedId
+    ? await api.budgets.retrieve(selectedId)
+    : null;
+  const selectedBudget =
+    selectedBudgetDetail?.status === 200
+      ? normalizeItem<Budget>(selectedBudgetDetail.data)
+      : (budgets.find((b) => b.id === selectedId) ?? null);
 
   return (
     <main className="container page-shell shell-grid">
@@ -148,7 +175,9 @@ export default async function OrcamentoPage({
 
             {selectedBudget.execution?.categories?.length ? (
               <>
-                <canvas id="budgetDetailChart" />
+                <div style={{ position: "relative", height: "320px", width: "100%" }}>
+                  <canvas id="budgetDetailChart" />
+                </div>
                 <script
                   id="budgetDetailData"
                   type="application/json"
@@ -261,6 +290,22 @@ export default async function OrcamentoPage({
             </table>
           </div>
         </section>
+      )}
+
+      {totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          hasNext={hasNext}
+          hasPrevious={hasPrevious}
+          pathname="/orcamento"
+          searchParams={{
+            month: query.month,
+            status: query.status,
+          }}
+        />
       )}
     </main>
   );
