@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
-import { clearAuthCookies } from "@/lib/session";
 import { normalizeItem } from "@/lib/normalizers";
 import { NavApp } from "@/components/layout/NavApp";
 import { Footer } from "@/components/layout/Footer";
@@ -15,7 +14,6 @@ export default async function ProtectedLayout({
   const response = await api.profile.get();
 
   if ([401, 403].includes(response.status)) {
-    await clearAuthCookies();
     redirect("/login");
   }
 

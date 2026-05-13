@@ -77,14 +77,20 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      return response;
     }
 
     if (tokenMissing) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      return response;
     }
   }
 

@@ -46,11 +46,6 @@ export async function consumeFlash(): Promise<{
   const type = cookieStore.get("flash_type")?.value;
   const message = cookieStore.get("flash_message")?.value;
 
-  if (type || message) {
-    cookieStore.delete("flash_type");
-    cookieStore.delete("flash_message");
-  }
-
   if (!type && !message) return null;
   return { type: type || "info", message: message || "" };
 }
