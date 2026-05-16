@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { normalizeItem } from "@/lib/normalizers";
 import { NavApp } from "@/components/layout/NavApp";
+import { ChartBootstrap } from "@/components/layout/ChartBootstrap";
 import { Footer } from "@/components/layout/Footer";
 import type { User } from "@/types";
 
@@ -30,6 +31,7 @@ export default async function ProtectedLayout({
     <body className="page--app">
       <NavApp currentUser={currentUser} currentPath={currentPath} />
       {children}
+      <ChartBootstrap />
       <Footer />
     </body>
   );

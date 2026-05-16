@@ -7,6 +7,37 @@ import { FieldErrors } from "@/components/ui/FieldErrors";
 import type { ActionState, Category } from "@/types";
 import { currentMonthInput } from "@/lib/formatters";
 
+const MONTH_NAMES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function buildMonthOptions(referenceYear: number) {
+  const options: Array<{ value: string; label: string }> = [];
+
+  for (let year = referenceYear - 2; year <= referenceYear + 2; year += 1) {
+    MONTH_NAMES.forEach((monthName, index) => {
+      const month = String(index + 1).padStart(2, "0");
+      options.push({
+        value: `${year}-${month}`,
+        label: `${monthName} de ${year}`,
+      });
+    });
+  }
+
+  return options;
+}
+
 const INITIAL_STATE: ActionState = { ok: true };
 
 export function BudgetForm({ categories }: { categories: Category[] }) {
@@ -14,9 +45,15 @@ export function BudgetForm({ categories }: { categories: Category[] }) {
     _createBudgetAction,
     INITIAL_STATE
   );
+  const currentMonth = currentMonthInput();
+  const currentYear = Number(currentMonth.slice(0, 4));
+  const monthOptions = buildMonthOptions(currentYear);
 
   return (
-    <article className="surface form-card" style={{ marginBottom: "2rem" }}>
+    <article
+      className="surface form-card"
+      style={{ marginBottom: "2rem", maxHeight: "450px", overflowY: "auto" }}
+    >
       <div className="page-heading">
         <span className="eyebrow">Novo orçamento</span>
         <h2 className="section-title">Cadastrar orçamento mensal</h2>
@@ -27,13 +64,18 @@ export function BudgetForm({ categories }: { categories: Category[] }) {
       <form className="form-grid" action={action}>
         <label className="field">
           <span>Mês</span>
-          <input
-            type="month"
+          <select
             name="month"
-            defaultValue={currentMonthInput()}
+            defaultValue={currentMonth}
             required
             disabled={pending}
-          />
+          >
+            {monthOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <FieldErrors errors={state.errors || {}} field="month" />
         </label>
 

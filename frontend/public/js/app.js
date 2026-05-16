@@ -468,4 +468,8 @@ function tryInitCharts(retries) {
   setupCategorySelect();
 }
 
+window.__initAppCharts = function () {
+  tryInitCharts(20);
+};
+
 tryInitCharts(20);
