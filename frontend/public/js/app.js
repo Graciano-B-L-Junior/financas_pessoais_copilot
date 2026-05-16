@@ -357,11 +357,58 @@ function setupCategorySelect() {
   const container = document.getElementById("categoryEvolutionContainer");
   const granularitySelect = document.getElementById("categoryEvolutionGranularity");
   const monthField = document.getElementById("categoryEvolutionMonthField");
-  const monthInput = document.getElementById("categoryEvolutionMonth");
+  const monthSelect = document.getElementById("categoryEvolutionMonth");
+
+  let abortController = null;
 
   function syncGranularityField() {
     if (!granularitySelect || !monthField) return;
     monthField.style.display = granularitySelect.value === "daily" ? "flex" : "none";
+  }
+
+  async function fetchAndPopulateMonths(categoryId) {
+    if (!monthSelect) return;
+    monthSelect.innerHTML = "<option value=\"\">Carregando meses...</option>";
+    monthSelect.disabled = true;
+
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+
+    try {
+      const response = await fetch(`/api/dashboard/category-months?category_id=${categoryId}`, {
+        signal: abortController.signal,
+      });
+
+      if (!response.ok) {
+        monthSelect.innerHTML = "<option value=\"\">Erro ao carregar meses</option>";
+        return;
+      }
+
+      const data = await response.json();
+      const months = data.months || [];
+
+      if (months.length === 0) {
+        monthSelect.innerHTML = "<option value=\"\">Sem meses disponíveis</option>";
+        monthSelect.disabled = true;
+        return;
+      }
+
+      const fmt = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" });
+      monthSelect.innerHTML = months
+        .map((m) => {
+          const [year, month] = m.split("-");
+          const d = new Date(Number(year), Number(month) - 1, 1);
+          const label = fmt.format(d);
+          return `<option value="${m}">${label}</option>`;
+        })
+        .join("");
+      monthSelect.disabled = false;
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        monthSelect.innerHTML = "<option value=\"\">Erro ao carregar meses</option>";
+        monthSelect.disabled = true;
+      }
+    }
   }
 
   async function loadCategoryEvolution() {
@@ -369,7 +416,7 @@ function setupCategorySelect() {
 
     const categoryId = categoryFilterSelect.value;
     const granularity = granularitySelect ? granularitySelect.value : "monthly";
-    const month = monthInput ? monthInput.value : "";
+    const month = monthSelect ? monthSelect.value : "";
 
     if (!categoryId) {
       container.style.display = "none";
@@ -440,15 +487,34 @@ function setupCategorySelect() {
   if (categoryFilterSelect && container) {
     syncGranularityField();
 
-    categoryFilterSelect.addEventListener("change", loadCategoryEvolution);
+    categoryFilterSelect.addEventListener("change", async () => {
+      const categoryId = categoryFilterSelect.value;
+      if (!categoryId) {
+        container.style.display = "none";
+        if (monthSelect) {
+          monthSelect.innerHTML = "<option value=\"\">-- selecione um mês --</option>";
+          monthSelect.disabled = true;
+        }
+        return;
+      }
+      if (granularitySelect && granularitySelect.value === "daily") {
+        await fetchAndPopulateMonths(categoryId);
+      }
+      await loadCategoryEvolution();
+    });
+
     if (granularitySelect) {
       granularitySelect.addEventListener("change", async () => {
         syncGranularityField();
+        const categoryId = categoryFilterSelect.value;
+        if (granularitySelect.value === "daily" && categoryId) {
+          await fetchAndPopulateMonths(categoryId);
+        }
         await loadCategoryEvolution();
       });
     }
-    if (monthInput) {
-      monthInput.addEventListener("change", loadCategoryEvolution);
+    if (monthSelect) {
+      monthSelect.addEventListener("change", loadCategoryEvolution);
     }
   }
 }

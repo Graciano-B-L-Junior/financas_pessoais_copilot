@@ -306,12 +306,13 @@ export default async function DashboardPage({
               style={{ display: "none" }}
             >
               <span>Mês</span>
-              <input
-                type="month"
+              <select
                 id="categoryEvolutionMonth"
                 name="category-evolution-month"
-                defaultValue={currentMonth}
-              />
+                disabled
+              >
+                <option value="">-- selecione um mês --</option>
+              </select>
             </label>
             <label className="field search-field">
               <span>Selecione uma categoria de despesa</span>

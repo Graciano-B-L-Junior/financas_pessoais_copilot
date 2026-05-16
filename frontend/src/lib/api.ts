@@ -171,6 +171,8 @@ export const api = {
       apiRequest("/dashboard/", { params }),
     categorySeries: (params?: Record<string, string | undefined>) =>
       apiRequest("/dashboard/category-series/", { params }),
+    categoryMonths: (params?: Record<string, string | undefined>) =>
+      apiRequest("/dashboard/category-months/", { params }),
   },
   analytics: {
     get: (params?: Record<string, string | undefined>) =>

@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.accounts.views import LogoutView, ProfileView, RegisterView
 from apps.accounts.views import CookieTokenObtainPairView, CookieTokenRefreshView
-from apps.analytics.views import DashboardView, ProfileAnalyticsView, CategorySeriesView
+from apps.analytics.views import DashboardView, ProfileAnalyticsView, CategorySeriesView, CategoryMonthsView
 from apps.budgets.views import BudgetViewSet
 from apps.categories.views import CategoryViewSet
 from apps.transactions.views import TransactionViewSet
@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/v1/profile/", ProfileView.as_view(), name="profile"),
     path("api/v1/dashboard/", DashboardView.as_view(), name="dashboard"),
     path("api/v1/dashboard/category-series/", CategorySeriesView.as_view(), name="category-series"),
+    path("api/v1/dashboard/category-months/", CategoryMonthsView.as_view(), name="category-months"),
     path("api/v1/analytics/profile/", ProfileAnalyticsView.as_view(), name="profile-analytics"),
     path("api/v1/", include(router.urls)),
 ]

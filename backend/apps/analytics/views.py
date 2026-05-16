@@ -331,6 +331,57 @@ class CategorySeriesView(APIView):
         )
 
 
+class CategoryMonthsView(APIView):
+    """
+    Retorna os meses distintos com ao menos uma transação de despesa
+    para a categoria informada, pertencente ao usuário autenticado.
+
+    Query params:
+    - category_id: ID da categoria (obrigatório, tipo despesa)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        category_id = request.query_params.get("category_id")
+
+        if not category_id:
+            return Response(
+                {"status": 400, "message": "category_id is required", "months": []},
+                status=400,
+            )
+
+        category = Category.objects.filter(
+            id=category_id,
+            user=request.user,
+            type=Category.TYPE_EXPENSE,
+        ).first()
+
+        if not category:
+            return Response(
+                {"status": 404, "message": "Categoria não encontrada", "months": []},
+                status=404,
+            )
+
+        months = (
+            Transaction.objects.filter(
+                user=request.user,
+                category=category,
+                type=Category.TYPE_EXPENSE,
+                is_active=True,
+            )
+            .annotate(month=TruncMonth("date"))
+            .values_list("month", flat=True)
+            .distinct()
+            .order_by("-month")
+        )
+
+        return Response(
+            {
+                "status": 200,
+                "months": [m.strftime("%Y-%m") for m in months if m],
+            }
+        )
+
 
 class ProfileAnalyticsView(APIView):
     permission_classes = [IsAuthenticated]
