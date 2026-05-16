@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { consumeFlash } from "@/lib/session";
 import { normalizeList, normalizeItem, extractPagination } from "@/lib/normalizers";
-import { formatCurrency, formatPercent, currentMonthInput } from "@/lib/formatters";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { Flash } from "@/components/ui/Flash";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Pagination } from "@/components/ui/Pagination";
@@ -16,6 +16,24 @@ import { BudgetForm } from "@/components/forms/BudgetForm";
 import type { Budget, Category } from "@/types";
 
 export const metadata: Metadata = { title: "Orcamento" };
+
+const alertTypeLabel: Record<string, string> = {
+  exceeded: "Ultrapassado",
+  warning: "Atenção",
+  threshold_reached: "Limite atingido",
+};
+
+const monthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  month: "long",
+  year: "numeric",
+});
+
+function formatBudgetMonth(value: string): string {
+  const date = new Date(`${value}-01T12:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  const formatted = monthFormatter.format(date);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
 
 interface SearchParams {
   month?: string;
@@ -40,14 +58,16 @@ export default async function OrcamentoPage({
   }
 
   const listParams: Record<string, string | undefined> = {
+    month: query.month || undefined,
     status: query.status || undefined,
     page: String(page),
     page_size: String(PAGE_SIZE),
   };
 
-  const [budgetsRes, categoriesRes] = await Promise.all([
+  const [budgetsRes, categoriesRes, monthsRes] = await Promise.all([
     api.budgets.list(listParams),
     api.categories.list({ is_active: "true", type: "despesa" }),
+    api.budgets.months(),
   ]);
 
   if ([401, 403].includes(budgetsRes.status)) redirect("/login");
@@ -60,6 +80,12 @@ export default async function OrcamentoPage({
   const hasNext = paginationMeta?.next !== null && paginationMeta !== null;
   const hasPrevious = paginationMeta?.previous !== null && paginationMeta !== null;
   const categories = normalizeList<Category>(categoriesRes.data);
+  const availableMonths =
+    monthsRes.status === 200 ? normalizeList<string>(monthsRes.data) : [];
+
+  const monthOptions = availableMonths.length
+    ? availableMonths
+    : Array.from(new Set(budgets.map((budget) => budget.month)));
 
   const selectedId = query.selected
     ? Number(query.selected)
@@ -92,11 +118,14 @@ export default async function OrcamentoPage({
         <form className="filters" method="get" action="/orcamento">
           <label className="field search-field search-field--narrow">
             <span>Mês</span>
-            <input
-              type="month"
-              name="month"
-              defaultValue={query.month || ""}
-            />
+            <select name="month" defaultValue={query.month || ""}>
+              <option value="">Todos</option>
+              {monthOptions.map((month) => (
+                <option key={month} value={month}>
+                  {formatBudgetMonth(month)}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field search-field search-field--narrow">
             <span>Status</span>
@@ -128,48 +157,48 @@ export default async function OrcamentoPage({
 
         {selectedBudget ? (
           <>
-            <section className="metric-grid" style={{ marginBottom: "1rem" }}>
-              <article className="metric surface">
-                <span className="stat-label">Orçado</span>
-                <div className="metric-value metric-value--accent">
+            <section className="budget-summary" style={{ marginBottom: "1rem" }}>
+              <article className="budget-summary__row">
+                <span className="budget-summary__label">Orçamento</span>
+                <strong className="budget-summary__value budget-summary__value--accent">
                   {formatCurrency(
                     selectedBudget.execution?.budgeted_total ||
                       selectedBudget.total_amount ||
                       0
                   )}
-                </div>
+                </strong>
               </article>
-              <article className="metric surface">
-                <span className="stat-label">Realizado</span>
-                <div className="metric-value metric-value--negative">
+              <article className="budget-summary__row">
+                <span className="budget-summary__label">Realizado</span>
+                <strong className="budget-summary__value budget-summary__value--negative">
                   {formatCurrency(
                     selectedBudget.execution?.actual_expenses || 0
                   )}
-                </div>
+                </strong>
               </article>
-              <article className="metric surface">
-                <span className="stat-label">Saldo</span>
-                <div
-                  className={`metric-value ${
+              <article className="budget-summary__row">
+                <span className="budget-summary__label">Saldo</span>
+                <strong
+                  className={`budget-summary__value ${
                     Number(
                       selectedBudget.execution?.remaining_amount || 0
                     ) >= 0
-                      ? "metric-value--positive"
-                      : "metric-value--negative"
+                      ? "budget-summary__value--positive"
+                      : "budget-summary__value--negative"
                   }`}
                 >
                   {formatCurrency(
                     selectedBudget.execution?.remaining_amount || 0
                   )}
-                </div>
+                </strong>
               </article>
-              <article className="metric surface">
-                <span className="stat-label">Execução</span>
-                <div className="metric-value">
+              <article className="budget-summary__row">
+                <span className="budget-summary__label">Execução</span>
+                <strong className="budget-summary__value">
                   {formatPercent(
                     selectedBudget.execution?.execution_percentage || 0
                   )}
-                </div>
+                </strong>
               </article>
             </section>
 
@@ -213,7 +242,7 @@ export default async function OrcamentoPage({
                               : "badge--success"
                         }`}
                       >
-                        {alert.type}
+                        {alertTypeLabel[alert.type] ?? alert.type}
                       </span>
                     </div>
                   </div>
@@ -249,7 +278,7 @@ export default async function OrcamentoPage({
                   <th>Mês</th>
                   <th>Total orçado</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>

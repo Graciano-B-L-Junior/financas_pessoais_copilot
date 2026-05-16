@@ -29,10 +29,14 @@ export default async function ProtectedLayout({
 
   return (
     <body className="page--app">
-      <NavApp currentUser={currentUser} currentPath={currentPath} />
-      {children}
+      <div className="app-layout">
+        <NavApp currentUser={currentUser} currentPath={currentPath} />
+        <div className="app-content">
+          {children}
+          <Footer />
+        </div>
+      </div>
       <ChartBootstrap />
-      <Footer />
     </body>
   );
 }

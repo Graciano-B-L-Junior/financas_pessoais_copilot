@@ -26,7 +26,7 @@ class BudgetCategorySerializer(serializers.ModelSerializer):
     def validate_category(self, value):
         user = self.context["request"].user
         if value.user_id != user.id or not value.is_active or value.type != Category.TYPE_EXPENSE:
-            raise serializers.ValidationError("Categoria invalida para orçamento.")
+            raise serializers.ValidationError("Categoria inválida para orçamento.")
         return value
 
     def validate_budgeted_amount(self, value):
@@ -72,19 +72,19 @@ class BudgetDetailSerializer(BudgetListSerializer):
             if self.instance:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
-                raise serializers.ValidationError({"month": ["Ja existe um orçamento para este mes."]})
+                raise serializers.ValidationError({"month": ["Já existe um orçamento para este mês."]})
 
         if categories_data is not None:
             category_ids = [item["category"].id for item in categories_data]
             if len(category_ids) != len(set(category_ids)):
-                raise serializers.ValidationError({"categories": ["Nao repita a mesma categoria dentro do orçamento."]})
+                raise serializers.ValidationError({"categories": ["Não repita a mesma categoria dentro do orçamento."]})
 
             categories_total = sum((item["budgeted_amount"] for item in categories_data), Decimal("0"))
             if total_amount <= 0 and categories_total <= 0:
                 raise serializers.ValidationError({"total_amount": ["Informe um valor total ou categorias com valores positivos."]})
 
             if total_amount > 0 and categories_total > (total_amount * Decimal("1.2")):
-                raise serializers.ValidationError({"categories": ["A soma das categorias nao pode ultrapassar 120% do total informado."]})
+                raise serializers.ValidationError({"categories": ["A soma das categorias não pode ultrapassar 120% do total informado."]})
 
         return attrs
 

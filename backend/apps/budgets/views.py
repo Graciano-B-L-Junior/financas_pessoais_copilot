@@ -36,6 +36,22 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         return queryset.order_by("-month", "-created_at")
 
+    @action(detail=False, methods=["get"])
+    def months(self, request):
+        months = list(
+            Budget.objects.filter(user=request.user)
+            .order_by("-month")
+            .values_list("month", flat=True)
+            .distinct()
+        )
+        return Response(
+            {
+                "status": 200,
+                "status_text": "OK",
+                "data": [month.strftime("%Y-%m") for month in months],
+            }
+        )
+
     def get_serializer_class(self):
         if self.action == "list":
             return BudgetListSerializer

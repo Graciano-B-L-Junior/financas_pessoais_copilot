@@ -83,7 +83,7 @@ class Budget(models.Model):
         category_executions = []
         category_alerts = []
         threshold_rules = [
-            (100, "exceeded", "Orcamento de {name} ultrapassado"),
+            (100, "exceeded", "Orçamento de {name} ultrapassado"),
             (90, "warning", "90% do orçamento de {name} foi utilizado"),
             (75, "threshold_reached", "75% do orçamento de {name} foi utilizado"),
         ]
@@ -220,9 +220,9 @@ class BudgetAlert(models.Model):
     ALERT_WARNING = "warning"
     ALERT_EXCEEDED = "exceeded"
     ALERT_CHOICES = (
-        (ALERT_THRESHOLD_REACHED, "Threshold reached"),
-        (ALERT_WARNING, "Warning"),
-        (ALERT_EXCEEDED, "Exceeded"),
+        (ALERT_THRESHOLD_REACHED, "Limite atingido"),
+        (ALERT_WARNING, "Atenção"),
+        (ALERT_EXCEEDED, "Ultrapassado"),
     )
 
     budget = models.ForeignKey(Budget, on_delete=models.CASCADE, related_name="alerts")

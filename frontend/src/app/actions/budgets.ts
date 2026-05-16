@@ -44,7 +44,7 @@ export async function createBudgetAction(
   const response = await api.budgets.create(buildBudgetPayload(formData));
 
   if (response.status === 201) {
-    await setFlash("success", "Orcamento cadastrado com sucesso.");
+    await setFlash("success", "Orçamento cadastrado com sucesso.");
     revalidatePath("/orcamento");
     redirect("/orcamento");
   }
@@ -55,16 +55,16 @@ export async function createBudgetAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel cadastrar o orcamento."] } };
+  return { ok: false, errors: { general: ["Não foi possível cadastrar o orçamento."] } };
 }
 
 export async function finalizeBudgetAction(id: number | string): Promise<void> {
   const response = await api.budgets.finalize(id);
   if ([401, 403].includes(response.status)) redirect("/login");
   if (response.status === 200) {
-    await setFlash("success", "Orcamento finalizado com sucesso.");
+    await setFlash("success", "Orçamento finalizado com sucesso.");
   } else {
-    await setFlash("warning", "Nao foi possivel finalizar o orcamento.");
+    await setFlash("warning", "Não foi possível finalizar o orçamento.");
   }
   revalidatePath("/orcamento");
   redirect("/orcamento");
@@ -73,7 +73,7 @@ export async function finalizeBudgetAction(id: number | string): Promise<void> {
 export async function deleteBudgetAction(id: number | string): Promise<void> {
   const response = await api.budgets.delete(id);
   if ([401, 403].includes(response.status)) redirect("/login");
-  await setFlash("info", "Orcamento removido com sucesso.");
+  await setFlash("info", "Orçamento removido com sucesso.");
   revalidatePath("/orcamento");
   redirect("/orcamento");
 }

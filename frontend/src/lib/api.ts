@@ -157,6 +157,7 @@ export const api = {
   budgets: {
     list: (params?: Record<string, string | undefined>) =>
       apiRequest("/budgets/", { params }),
+    months: () => apiRequest("/budgets/months/"),
     create: (data: unknown) =>
       apiRequest("/budgets/", { method: "POST", data }),
     retrieve: (id: number | string) => apiRequest(`/budgets/${id}/`),
