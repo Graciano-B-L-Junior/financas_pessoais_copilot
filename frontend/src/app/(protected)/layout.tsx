@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { normalizeItem } from "@/lib/normalizers";
@@ -24,13 +23,10 @@ export default async function ProtectedLayout({
 
   const currentUser = normalizeItem<User>(response.data);
 
-  const headersList = await headers();
-  const currentPath = headersList.get("x-invoke-path") || "/";
-
   return (
     <body className="page--app">
       <div className="app-layout">
-        <NavApp currentUser={currentUser} currentPath={currentPath} />
+        <NavApp currentUser={currentUser} />
         <div className="app-content">
           {children}
           <Footer />

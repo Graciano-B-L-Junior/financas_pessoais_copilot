@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
 import { getInitials } from "@/lib/formatters";
 import { env } from "@/config/env";
@@ -6,14 +9,16 @@ import type { User } from "@/types";
 
 interface Props {
   currentUser: User;
-  currentPath: string;
+  currentPath?: string;
 }
 
 function isActivePath(current: string, target: string) {
   return current === target || current.startsWith(`${target}/`);
 }
 
-export function NavApp({ currentUser, currentPath }: Props) {
+export function NavApp({ currentUser, currentPath: currentPathProp }: Props) {
+  const pathname = usePathname();
+  const currentPath = pathname || currentPathProp || "/";
   return (
     <aside className="app-sidebar">
       <div className="brand">
