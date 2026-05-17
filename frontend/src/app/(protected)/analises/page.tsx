@@ -55,7 +55,7 @@ export default async function AnalisesPage({
         </form>
       </section>
 
-      <section className="metric-grid">
+      <section className="analises-metric-grid">
         <article className="metric surface">
           <span className="stat-label">Receitas</span>
           <div className="metric-value metric-value--accent">

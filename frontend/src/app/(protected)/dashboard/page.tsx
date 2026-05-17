@@ -150,7 +150,7 @@ export default async function DashboardPage({
         </form>
       </section>
 
-      <section className="metric-grid">
+      <section className="dashboard-metric-grid">
         <article className="metric surface">
           <span className="stat-label">Receitas</span>
           <div className="metric-value metric-value--accent">
