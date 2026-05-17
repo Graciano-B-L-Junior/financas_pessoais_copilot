@@ -27,17 +27,17 @@ export function LoginForm({ nextPath = "/dashboard", flash }: Props) {
             Entre para controlar categorias, lancamentos e indicadores.
           </h2>
           <p>
-            O front preserva a sessao em cookies HttpOnly e redireciona para o
-            painel quando a autenticacao e valida.
+            O front preserva a sessão em cookies HttpOnly e redireciona para o
+            painel quando a autenticação é válida.
           </p>
           <div className="hero-preview">
             <div className="hero-preview__grid">
               <div className="hero-preview__mini">
-                <strong>Resumo rapido</strong>
+                <strong>Resumo rápido</strong>
                 <span>Dashboard</span>
               </div>
               <div className="hero-preview__mini">
-                <strong>Operacoes</strong>
+                <strong>Operações</strong>
                 <span>CRUD</span>
               </div>
               <div className="hero-preview__mini">
@@ -106,7 +106,7 @@ export function LoginForm({ nextPath = "/dashboard", flash }: Props) {
           </form>
 
           <p className="help">
-            Ainda nao tem conta?{" "}
+            Ainda não tem conta?{" "}
             <Link href="/register">Crie sua conta</Link>.
           </p>
         </section>

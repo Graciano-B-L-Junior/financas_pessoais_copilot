@@ -143,7 +143,7 @@ export function TransactionForm({
               value="false"
               selected={!transaction || !transaction.is_recurring}
             >
-              Nao
+              Não
             </option>
             <option value="true" selected={Boolean(transaction?.is_recurring)}>
               Sim

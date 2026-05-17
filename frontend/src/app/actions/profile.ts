@@ -31,5 +31,5 @@ export async function updateProfileAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel atualizar o perfil."] } };
+  return { ok: false, errors: { general: ["Não foi possível atualizar o perfil."] } };
 }

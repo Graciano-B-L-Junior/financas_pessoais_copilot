@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   if (response.status !== 200) {
     return NextResponse.json(
-      { error: "Nao foi possivel obter os dados." },
+      { error: "Não foi possível obter os dados." },
       { status: response.status }
     );
   }

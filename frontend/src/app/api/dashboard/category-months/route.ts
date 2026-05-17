@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   if (response.status !== 200) {
     return NextResponse.json(
-      { error: "Nao foi possivel obter os meses disponíveis." },
+      { error: "Não foi possível obter os meses disponíveis." },
       { status: response.status }
     );
   }

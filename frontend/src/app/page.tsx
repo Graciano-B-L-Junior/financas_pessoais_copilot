@@ -36,7 +36,7 @@ export default async function LandingPage() {
               <div className="callout" style={{ marginTop: "1.5rem" }}>
                 <strong>Fluxo completo integrado</strong>
                 <span className="muted">
-                  Categorias, lancamentos, dashboard, perfil e analises
+                  Categorias, lançamentos, dashboard, perfil e análises
                   conectados ao backend Django.
                 </span>
               </div>
@@ -67,7 +67,7 @@ export default async function LandingPage() {
               <div className="list-grid">
                 <div className="list-item">
                   <div className="list-item__title">
-                    <strong>Dashboard orientado a decisao</strong>
+                    <strong>Dashboard orientado a decisão</strong>
                     <span className="badge badge--primary">RF001</span>
                   </div>
                   <p>
@@ -97,7 +97,7 @@ export default async function LandingPage() {
               </h2>
               <p className="section-lead">
                 O front conversa com a API sem expor os tokens ao navegador e
-                organiza o fluxo por paginas simples de manter.
+                organiza o fluxo por páginas simples de manter.
               </p>
             </div>
 
@@ -112,18 +112,18 @@ export default async function LandingPage() {
               </article>
               <article className="feature surface">
                 <span className="feature-badge">Movimentacoes</span>
-                <h3>Lancamentos e recorrencias</h3>
+                <h3>Lançamentos e recorrências</h3>
                 <p>
                   Formulario dedicado para receitas, despesas e lancamentos
-                  recorrentes com filtros por periodo.
+                  recorrentes com filtros por período.
                 </p>
               </article>
               <article className="feature surface">
                 <span className="feature-badge">Insights</span>
-                <h3>Resumo e analises</h3>
+                <h3>Resumo e análises</h3>
                 <p>
-                  Visualizacoes consolidadas com top categorias, saldo,
-                  proporcao de despesas e alertas de comportamento.
+                  Visualizações consolidadas com top categorias, saldo,
+                  proporção de despesas e alertas de comportamento.
                 </p>
               </article>
             </div>

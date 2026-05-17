@@ -68,8 +68,8 @@ export default async function DashboardPage({
           <span className="eyebrow">Dashboard</span>
           <h1>Seu resumo financeiro</h1>
           <p>
-            Visao consolidada com filtros por periodo, categoria, tipo,
-            recorrencia e faixa de valor.
+            Visão consolidada com filtros por período, categoria, tipo,
+            recorrência e faixa de valor.
           </p>
           <div className="chip">Atualizado a partir da API em tempo real</div>
         </div>
@@ -120,7 +120,7 @@ export default async function DashboardPage({
                 Sim
               </option>
               <option value="false" selected={query.is_recurring === "false"}>
-                Nao
+                Não
               </option>
             </select>
           </label>
@@ -135,7 +135,7 @@ export default async function DashboardPage({
             />
           </label>
           <label className="field search-field search-field--narrow">
-            <span>Valor maximo</span>
+            <span>Valor máximo</span>
             <input
               type="text"
               id="maxAmountInput"
@@ -156,14 +156,14 @@ export default async function DashboardPage({
           <div className="metric-value metric-value--accent">
             {formatCurrency(dashboard.summary?.total_income || 0)}
           </div>
-          <p className="metric-desc">Total do periodo filtrado.</p>
+          <p className="metric-desc">Total do período filtrado.</p>
         </article>
         <article className="metric surface">
           <span className="stat-label">Despesas</span>
           <div className="metric-value metric-value--negative">
             {formatCurrency(dashboard.summary?.total_expenses || 0)}
           </div>
-          <p className="metric-desc">Saidas consolidadas do periodo.</p>
+          <p className="metric-desc">Saídas consolidadas do período.</p>
         </article>
         <article className="metric surface">
           <span className="stat-label">Saldo</span>
@@ -190,7 +190,7 @@ export default async function DashboardPage({
           <div className="metric-value">
             {dashboard.summary?.recurring_count || 0}
           </div>
-          <p className="metric-desc">Itens com recorrencia ativa.</p>
+          <p className="metric-desc">Itens com recorrência ativa.</p>
         </article>
         <article className="metric surface">
           <span className="stat-label">Orcamento</span>
@@ -278,7 +278,7 @@ export default async function DashboardPage({
             </>
           ) : (
             <div className="empty-state">
-              <h3>Sem categorias no periodo</h3>
+              <h3>Sem categorias no período</h3>
               <p>
                 Adicione lancamentos ou amplie o filtro para visualizar a
                 distribuicao.
@@ -336,7 +336,7 @@ export default async function DashboardPage({
         <section className="surface panel">
           <div className="page-heading">
             <span className="eyebrow">Recentes</span>
-            <h2 className="section-title">Ultimos lancamentos</h2>
+            <h2 className="section-title">Últimos lançamentos</h2>
           </div>
           <div className="table-wrap">
             <table className="table">

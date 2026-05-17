@@ -42,7 +42,7 @@ export async function createTransactionAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel cadastrar o lancamento."] } };
+  return { ok: false, errors: { general: ["Não foi possível cadastrar o lançamento."] } };
 }
 
 export async function updateTransactionAction(
@@ -64,13 +64,13 @@ export async function updateTransactionAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel atualizar o lancamento."] } };
+  return { ok: false, errors: { general: ["Não foi possível atualizar o lançamento."] } };
 }
 
 export async function deleteTransactionAction(id: number | string): Promise<void> {
   const response = await api.transactions.delete(id);
   if ([401, 403].includes(response.status)) redirect("/login");
-  await setFlash("info", "Lancamento removido com sucesso.");
+  await setFlash("info", "Lançamento removido com sucesso.");
   revalidatePath("/lancamentos");
   redirect("/lancamentos");
 }

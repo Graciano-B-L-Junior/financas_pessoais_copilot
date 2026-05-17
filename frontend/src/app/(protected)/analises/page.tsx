@@ -5,7 +5,7 @@ import { normalizeItem } from "@/lib/normalizers";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import type { Analytics } from "@/types";
 
-export const metadata: Metadata = { title: "Analises" };
+export const metadata: Metadata = { title: "Análises" };
 
 interface SearchParams {
   start?: string;
@@ -32,11 +32,11 @@ export default async function AnalisesPage({
     <main className="container page-shell shell-grid">
       <section className="surface panel">
         <div className="page-heading">
-          <span className="eyebrow">Analises</span>
+          <span className="eyebrow">Análises</span>
           <h1>Insights do perfil financeiro</h1>
           <p>
-            Resumo analitico com proporcoes, top categorias e sugestoes
-            orientadas pelo comportamento do usuario.
+            Resumo analítico com proporções, top categorias e sugestões
+            orientadas pelo comportamento do usuário.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default async function AnalisesPage({
             <input type="date" name="end" defaultValue={query.end || ""} />
           </label>
           <button className="btn btn--primary" type="submit">
-            Atualizar analise
+            Atualizar análise
           </button>
         </form>
       </section>
@@ -116,7 +116,7 @@ export default async function AnalisesPage({
             </div>
           ) : (
             <div className="empty-state">
-              <h3>Nenhuma categoria no periodo</h3>
+              <h3>Nenhuma categoria no período</h3>
               <p>
                 Amplie o intervalo para visualizar a distribuicao analitica.
               </p>
@@ -162,7 +162,7 @@ export default async function AnalisesPage({
             </div>
           ) : (
             <div className="empty-state">
-              <h3>Sem insights no periodo</h3>
+              <h3>Sem insights no período</h3>
               <p>
                 O sistema vai gerar recomendacoes assim que houver dados
                 suficientes.

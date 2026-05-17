@@ -99,7 +99,7 @@ export default async function LancamentosPage({
           <span className="eyebrow">Lancamentos</span>
           <h1>Movimentacoes financeiras</h1>
           <p>
-            Registre receitas, despesas e recorrencias com filtros de periodo e
+            Registre receitas, despesas e recorrências com filtros de período e
             categoria.
           </p>
           <div className="chip">
@@ -154,7 +154,7 @@ export default async function LancamentosPage({
                 Sim
               </option>
               <option value="false" selected={query.is_recurring === "false"}>
-                Nao
+                Não
               </option>
             </select>
           </label>
@@ -217,7 +217,7 @@ export default async function LancamentosPage({
                           </span>
                         </td>
                         <td>{formatCurrency(t.amount)}</td>
-                        <td>{t.is_recurring ? "Sim" : "Nao"}</td>
+                        <td>{t.is_recurring ? "Sim" : "Não"}</td>
                         <td>
                           <div className="table-actions">
                             <Link

@@ -34,7 +34,7 @@ export async function loginAction(
 
   return {
     ok: false,
-    errors: { general: ["Nao foi possivel entrar agora. Tente novamente em instantes."] },
+    errors: { general: ["Não foi possível entrar agora. Tente novamente em instantes."] },
   };
 }
 
@@ -52,7 +52,7 @@ export async function registerAction(
   const response = await api.auth.register(payload);
 
   if (response.status === 201) {
-    await setFlash("success", "Cadastro realizado com sucesso. Faca login para continuar.");
+    await setFlash("success", "Cadastro realizado com sucesso. Faça login para continuar.");
     redirect("/login");
   }
 
@@ -65,7 +65,7 @@ export async function registerAction(
 
   return {
     ok: false,
-    errors: { general: ["Nao foi possivel concluir o cadastro agora."] },
+    errors: { general: ["Não foi possível concluir o cadastro agora."] },
   };
 }
 

@@ -37,7 +37,7 @@ export async function createCategoryAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel cadastrar a categoria."] } };
+  return { ok: false, errors: { general: ["Não foi possível cadastrar a categoria."] } };
 }
 
 export async function updateCategoryAction(
@@ -59,7 +59,7 @@ export async function updateCategoryAction(
 
   if ([401, 403].includes(response.status)) redirect("/login");
 
-  return { ok: false, errors: { general: ["Nao foi possivel atualizar a categoria."] } };
+  return { ok: false, errors: { general: ["Não foi possível atualizar a categoria."] } };
 }
 
 export async function toggleCategoryStatusAction(

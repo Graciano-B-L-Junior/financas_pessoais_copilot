@@ -52,7 +52,7 @@ function flattenMessages(value: unknown): string[] {
 export function normalizeErrors(payload: unknown): FormErrors {
   const normalized: FormErrors = { general: [] };
   if (!payload) {
-    normalized.general = ["Nao foi possivel concluir a operacao."];
+    normalized.general = ["Não foi possível concluir a operação."];
     return normalized;
   }
   const p = payload as Record<string, unknown>;
@@ -74,7 +74,7 @@ export function normalizeErrors(payload: unknown): FormErrors {
     normalized.general.push(...flattenMessages(p.message || p.detail));
   }
   if (!normalized.general.length) {
-    normalized.general.push("Nao foi possivel concluir a operacao.");
+    normalized.general.push("Não foi possível concluir a operação.");
   }
   return normalized;
 }
