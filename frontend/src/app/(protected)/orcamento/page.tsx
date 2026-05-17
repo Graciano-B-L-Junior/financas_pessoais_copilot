@@ -58,7 +58,6 @@ export default async function OrcamentoPage({
   }
 
   const listParams: Record<string, string | undefined> = {
-    month: query.month || undefined,
     status: query.status || undefined,
     page: String(page),
     page_size: String(PAGE_SIZE),
@@ -87,10 +86,21 @@ export default async function OrcamentoPage({
     ? availableMonths
     : Array.from(new Set(budgets.map((budget) => budget.month)));
 
+  let selectedBudgetByMonth: Budget | null = null;
+  if (query.month && !query.selected) {
+    const monthBudgetRes = await api.budgets.list({
+      month: query.month,
+      page_size: "1",
+    });
+    if (monthBudgetRes.status === 200) {
+      selectedBudgetByMonth = normalizeList<Budget>(monthBudgetRes.data)[0] ?? null;
+    }
+  }
+
   const selectedId = query.selected
     ? Number(query.selected)
     : query.month
-      ? (budgets.find((b) => b.month === query.month)?.id ?? budgets[0]?.id)
+      ? selectedBudgetByMonth?.id ?? budgets[0]?.id
       : budgets[0]?.id;
   const selectedBudgetDetail = selectedId
     ? await api.budgets.retrieve(selectedId)
@@ -110,7 +120,7 @@ export default async function OrcamentoPage({
             Registre seu orçamento mensal, distribua por categorias e
             acompanhe o realizado em relação ao previsto.
           </p>
-          <div className="chip">{budgets.length} orçamentos cadastrados</div>
+          <div className="chip">{totalCount} orçamentos cadastrados</div>
         </div>
 
         <Flash flash={flash} />
