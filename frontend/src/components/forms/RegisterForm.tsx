@@ -24,7 +24,7 @@ export function RegisterForm({ flash }: Props) {
           <span className="eyebrow">Cadastro</span>
           <h2>Abra sua conta e comece com um fluxo padronizado.</h2>
           <p>
-            O formulario segue a politica de senha exigida pelo backend e mostra
+            O formulário segue a política de senha exigida pelo backend e mostra
             mensagens claras quando algo falha.
           </p>
           <div className="hero-preview">
@@ -48,14 +48,13 @@ export function RegisterForm({ flash }: Props) {
             </div>
           </div>
           <ul>
-            <li>Nome, sobrenome, email e senha sao obrigatorios.</li>
+            <li>Nome, sobrenome, email e senha são obrigatórios.</li>
             <li>
-              Senha precisa ter maiuscula, minuscula, numero e caractere
+              Senha precisa ter maiúscula, minúscula, número e caractere
               especial.
             </li>
             <li>
-              Erros do backend aparecem por campo e no topo do formulario.
-            </li>
+                Erros do backend aparecem por campo e no topo do formulário.
           </ul>
         </section>
 
@@ -118,8 +117,8 @@ export function RegisterForm({ flash }: Props) {
                 disabled={pending}
               />
               <small className="field-help">
-                Minimo de 6 caracteres, com maiuscula, minuscula, numero e
-                simbolo.
+                Mínimo de 6 caracteres, com maiúscula, minúscula, número e
+                símbolo.
               </small>
               <FieldErrors errors={state.errors || {}} field="password" />
             </label>
@@ -134,7 +133,7 @@ export function RegisterForm({ flash }: Props) {
           </form>
 
           <p className="help">
-            Ja tem cadastro? <Link href="/login">Entrar agora</Link>.
+            Já tem cadastro? <Link href="/login">Entrar agora</Link>.
           </p>
         </section>
       </div>

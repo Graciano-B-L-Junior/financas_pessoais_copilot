@@ -11,7 +11,7 @@ import { TransactionForm } from "@/components/forms/TransactionForm";
 import { deleteTransactionAction } from "@/app/actions/transactions";
 import type { Category, Transaction } from "@/types";
 
-export const metadata: Metadata = { title: "Lancamentos" };
+export const metadata: Metadata = { title: "Lançamentos" };
 
 interface SearchParams {
   start?: string;
@@ -96,12 +96,12 @@ export default async function LancamentosPage({
     <main className="container page-shell shell-grid">
       <section className="surface panel">
         <div className="page-heading">
-          <span className="eyebrow">Lancamentos</span>
-          <h1>Movimentacoes financeiras</h1>
-          <p>
-            Registre receitas, despesas e recorrências com filtros de período e
-            categoria.
-          </p>
+            <span className="eyebrow">Lançamentos</span>
+            <h1>Movimentações financeiras</h1>
+            <p>
+              Registre receitas, despesas e recorrências com filtros de período e
+              categoria.
+            </p>
           <div className="chip">
             {totalCount} {totalCount === 1 ? "registro" : "registros"} •{" "}
             {totalPages > 1 && `Página ${page} de ${totalPages}`}
@@ -112,7 +112,7 @@ export default async function LancamentosPage({
 
         <form className="filters" method="get" action="/lancamentos">
           <label className="field search-field search-field--narrow">
-            <span>Inicio</span>
+            <span>Início</span>
             <input type="date" name="start" defaultValue={query.start || ""} />
           </label>
           <label className="field search-field search-field--narrow">
@@ -170,7 +170,7 @@ export default async function LancamentosPage({
         <article className="surface table-card">
           <div className="page-heading">
             <span className="eyebrow">Lista</span>
-            <h2 className="section-title">Movimentacoes cadastradas</h2>
+            <h2 className="section-title">Movimentações cadastradas</h2>
           </div>
 
           {transactions.length ? (
@@ -193,7 +193,7 @@ export default async function LancamentosPage({
                   <thead>
                     <tr>
                       <th>Data</th>
-                      <th>Descricao</th>
+                      <th>Descrição</th>
                       <th>Tipo</th>
                       <th>Valor</th>
                       <th>Recorrente</th>
@@ -250,8 +250,8 @@ export default async function LancamentosPage({
             </>
           ) : (
             <div className="empty-state">
-              <h3>Nenhum lancamento encontrado</h3>
-              <p>Adicione seu primeiro lancamento financeiro.</p>
+              <h3>Nenhum lançamento encontrado</h3>
+              <p>Adicione seu primeiro lançamento financeiro.</p>
             </div>
           )}
         </article>
@@ -267,7 +267,7 @@ function DeleteTransactionForm({ id }: { id: number }) {
       <button
         className="btn btn--danger"
         type="submit"
-        data-confirm="Remover este lancamento?"
+        data-confirm="Remover este lançamento?"
       >
         Excluir
       </button>

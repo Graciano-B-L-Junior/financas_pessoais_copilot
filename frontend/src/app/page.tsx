@@ -15,13 +15,13 @@ export default async function LandingPage() {
         <main className="container page-shell">
           <section className="hero surface">
             <div className="hero-copy">
-              <span className="eyebrow">Modulo completo</span>
+              <span className="eyebrow">Módulo completo</span>
               <h1>
                 Finanças pessoais com leitura clara, segura e pronta para uso.
               </h1>
               <p>
                 Controle financeiro com dashboard, lançamentos e análises em um
-                unico lugar.
+                único lugar.
               </p>
 
               <div className="hero-actions">
@@ -50,7 +50,7 @@ export default async function LandingPage() {
                     <span>+ R$ 1.840,00</span>
                   </div>
                   <div className="hero-preview__mini">
-                    <strong>Lancamentos recorrentes</strong>
+                    <strong>Lançamentos recorrentes</strong>
                     <span>04</span>
                   </div>
                   <div className="hero-preview__mini">
@@ -72,16 +72,16 @@ export default async function LandingPage() {
                   </div>
                   <p>
                     Resumo, filtros e indicadores para acompanhar receitas e
-                    despesas sem ruido visual.
+                    despesas sem ruído visual.
                   </p>
                 </div>
                 <div className="list-item">
                   <div className="list-item__title">
-                    <strong>Operacao guiada por formulario</strong>
+                    <strong>Operação guiada por formulário</strong>
                     <span className="badge badge--success">RF002</span>
                   </div>
                   <p>
-                    CRUD de categorias e lancamentos com validacao no backend e
+                    CRUD de categorias e lançamentos com validação no backend e
                     UX de erro mais clara.
                   </p>
                 </div>
@@ -91,9 +91,9 @@ export default async function LandingPage() {
 
           <section className="section" style={{ marginTop: "1rem" }}>
             <div className="page-heading">
-              <span className="eyebrow">O que voce ganha</span>
+              <span className="eyebrow">O que você ganha</span>
               <h2 className="section-title">
-                Uma superficie unica para operar o produto inteiro.
+                Uma superfície única para operar o produto inteiro.
               </h2>
               <p className="section-lead">
                 O front conversa com a API sem expor os tokens ao navegador e
@@ -103,18 +103,18 @@ export default async function LandingPage() {
 
             <div className="feature-grid">
               <article className="feature surface">
-                <span className="feature-badge">Autenticacao</span>
-                <h3>Login e cadastro sem friccao</h3>
+                <span className="feature-badge">Autenticação</span>
+                <h3>Login e cadastro sem fricção</h3>
                 <p>
                   Fluxo com cookies HttpOnly, mensagens de erro objetivas e
-                  transicao direta para o painel.
+                  transição direta para o painel.
                 </p>
               </article>
               <article className="feature surface">
-                <span className="feature-badge">Movimentacoes</span>
+                <span className="feature-badge">Movimentações</span>
                 <h3>Lançamentos e recorrências</h3>
                 <p>
-                  Formulario dedicado para receitas, despesas e lancamentos
+                  Formulário dedicado para receitas, despesas e lançamentos
                   recorrentes com filtros por período.
                 </p>
               </article>

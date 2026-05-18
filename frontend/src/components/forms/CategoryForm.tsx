@@ -65,7 +65,7 @@ export function CategoryForm({ category, action: customAction }: Props) {
         </label>
 
         <label className="field">
-          <span>Descricao</span>
+          <span>Descrição</span>
           <textarea
             name="description"
             maxLength={500}

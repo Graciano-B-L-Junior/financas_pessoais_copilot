@@ -99,8 +99,8 @@ export default async function CategoriasPage({
                     <th>Nome</th>
                     <th>Tipo</th>
                     <th>Status</th>
-                    <th>Descricao</th>
-                    <th>Acoes</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>

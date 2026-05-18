@@ -28,10 +28,10 @@ export function TransactionForm({
     <article className="surface form-card">
       <div className="page-heading">
         <span className="eyebrow">
-          {transaction ? "Editar lancamento" : "Novo lancamento"}
+          {transaction ? "Editar lançamento" : "Novo lançamento"}
         </span>
         <h2 className="section-title">
-          {transaction ? "Atualizar movimentacao" : "Cadastrar movimentacao"}
+          {transaction ? "Atualizar movimentação" : "Cadastrar movimentação"}
         </h2>
       </div>
 
@@ -39,7 +39,7 @@ export function TransactionForm({
         <div className="empty-state" style={{ marginBottom: "1rem" }}>
           <h3>Nenhuma categoria ativa</h3>
           <p>
-            Crie uma categoria ativa antes de registrar novos lancamentos.
+            Crie uma categoria ativa antes de registrar novos lançamentos.
           </p>
           <Link className="btn btn--primary" href="/categorias">
             Ir para categorias
@@ -111,7 +111,7 @@ export function TransactionForm({
         </div>
 
         <label className="field">
-          <span>Descricao</span>
+          <span>Descrição</span>
           <input
             type="text"
             name="description"
@@ -154,7 +154,7 @@ export function TransactionForm({
         {transaction?.is_recurring && (
           <>
             <label className="field">
-              <span>Frequencia</span>
+              <span>Frequência</span>
               <select name="frequency" disabled={pending}>
                 <option value="">Selecione</option>
                 {["diaria", "semanal", "quinzenal", "mensal", "anual"].map(
@@ -174,7 +174,7 @@ export function TransactionForm({
 
             <div className="grid-2">
               <label className="field">
-                <span>Data inicio</span>
+                <span>Data início</span>
                 <input
                   type="date"
                   name="start_date"
@@ -196,7 +196,7 @@ export function TransactionForm({
         )}
 
         <button className="btn btn--primary" type="submit" disabled={pending}>
-          {pending ? "Salvando..." : "Salvar lancamento"}
+          {pending ? "Salvando..." : "Salvar lançamento"}
         </button>
       </form>
     </article>

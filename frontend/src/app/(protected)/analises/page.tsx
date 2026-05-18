@@ -42,7 +42,7 @@ export default async function AnalisesPage({
 
         <form className="filters" method="get" action="/analises">
           <label className="field search-field search-field--narrow">
-            <span>Inicio</span>
+            <span>Início</span>
             <input type="date" name="start" defaultValue={query.start || ""} />
           </label>
           <label className="field search-field search-field--narrow">
@@ -118,7 +118,7 @@ export default async function AnalisesPage({
             <div className="empty-state">
               <h3>Nenhuma categoria no período</h3>
               <p>
-                Amplie o intervalo para visualizar a distribuicao analitica.
+                Amplie o intervalo para visualizar a distribuição analítica.
               </p>
             </div>
           )}

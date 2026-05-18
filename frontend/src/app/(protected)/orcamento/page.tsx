@@ -15,7 +15,7 @@ import {
 import { BudgetForm } from "@/components/forms/BudgetForm";
 import type { Budget, Category } from "@/types";
 
-export const metadata: Metadata = { title: "Orcamento" };
+export const metadata: Metadata = { title: "Orçamento" };
 
 const alertTypeLabel: Record<string, string> = {
   exceeded: "Ultrapassado",

@@ -78,7 +78,7 @@ export default async function DashboardPage({
 
         <form className="filters" method="get" action="/dashboard">
           <label className="field search-field search-field--narrow">
-            <span>Inicio</span>
+            <span>Início</span>
             <input type="date" name="start" defaultValue={query.start || ""} />
           </label>
           <label className="field search-field search-field--narrow">
@@ -125,7 +125,7 @@ export default async function DashboardPage({
             </select>
           </label>
           <label className="field search-field search-field--narrow">
-            <span>Valor minimo</span>
+            <span>Início</span>
             <input
               type="text"
               id="minAmountInput"
@@ -176,7 +176,7 @@ export default async function DashboardPage({
           >
             {formatCurrency(dashboard.summary?.balance || 0)}
           </div>
-          <p className="metric-desc">Resultado entre entradas e saidas.</p>
+          <p className="metric-desc">Resultado entre entradas e saídas.</p>
         </article>
         <article className="metric surface">
           <span className="stat-label">Lancamentos</span>
@@ -280,8 +280,8 @@ export default async function DashboardPage({
             <div className="empty-state">
               <h3>Sem categorias no período</h3>
               <p>
-                Adicione lancamentos ou amplie o filtro para visualizar a
-                distribuicao.
+                Adicione lançamentos ou amplie o filtro para visualizar a
+                distribuição.
               </p>
             </div>
           )}

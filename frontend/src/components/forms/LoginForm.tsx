@@ -24,7 +24,7 @@ export function LoginForm({ nextPath = "/dashboard", flash }: Props) {
         <section className="auth-visual surface">
           <span className="eyebrow">Acesso seguro</span>
           <h2>
-            Entre para controlar categorias, lancamentos e indicadores.
+            Entre para controlar categorias, lançamentos e indicadores.
           </h2>
           <p>
             O front preserva a sessão em cookies HttpOnly e redireciona para o
@@ -61,8 +61,8 @@ export function LoginForm({ nextPath = "/dashboard", flash }: Props) {
           <div>
             <h1>Entrar</h1>
             <p>
-              Acesse sua area financeira com seguranca e sem etapas
-              desnecessarias.
+              Acesse sua área financeira com segurança e sem etapas
+              desnecessárias.
             </p>
           </div>
 

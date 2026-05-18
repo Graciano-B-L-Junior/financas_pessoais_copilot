@@ -6,7 +6,7 @@ import { TransactionForm } from "@/components/forms/TransactionForm";
 import { updateTransactionAction } from "@/app/actions/transactions";
 import type { Category, Transaction } from "@/types";
 
-export const metadata: Metadata = { title: "Editar lancamento" };
+export const metadata: Metadata = { title: "Editar lançamento" };
 
 export default async function TransactionEditPage({
   params,
