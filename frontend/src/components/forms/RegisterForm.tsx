@@ -54,7 +54,8 @@ export function RegisterForm({ flash }: Props) {
               especial.
             </li>
             <li>
-                Erros do backend aparecem por campo e no topo do formulário.
+              Erros do backend aparecem por campo e no topo do formulário.
+            </li>
           </ul>
         </section>
 

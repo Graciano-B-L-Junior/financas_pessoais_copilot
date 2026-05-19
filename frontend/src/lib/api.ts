@@ -153,6 +153,26 @@ export const api = {
       apiRequest(`/transactions/${id}/`, { method: "PATCH", data }),
     delete: (id: number | string) =>
       apiRequest(`/transactions/${id}/`, { method: "DELETE" }),
+    importPreview: async (formData: FormData) => {
+      const cookieStore = await getCookieStore();
+      const access = cookieStore.get("access_token")?.value;
+      const url = `${BASE_URL}/transactions/import/preview/`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          ...(access ? { Authorization: `Bearer ${access}` } : {}),
+        },
+        body: formData,
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => null);
+      return { status: res.status, data };
+    },
+    importConfirm: (data: unknown) =>
+      apiRequest("/transactions/import/confirm/", { method: "POST", data }),
+    exportXlsx: (year: number | string) =>
+      apiRequest(`/transactions/export/`, { params: { year: String(year) } }),
+    template: () => apiRequest("/transactions/template/"),
   },
   budgets: {
     list: (params?: Record<string, string | undefined>) =>

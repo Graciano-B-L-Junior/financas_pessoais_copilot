@@ -8,7 +8,13 @@ from apps.accounts.views import CookieTokenObtainPairView, CookieTokenRefreshVie
 from apps.analytics.views import DashboardView, ProfileAnalyticsView, CategorySeriesView, CategoryMonthsView
 from apps.budgets.views import BudgetViewSet
 from apps.categories.views import CategoryViewSet
-from apps.transactions.views import TransactionViewSet
+from apps.transactions.views import (
+    TransactionViewSet,
+    SpreadsheetPreviewView,
+    SpreadsheetConfirmView,
+    SpreadsheetExportView,
+    SpreadsheetTemplateView,
+)
 
 router = DefaultRouter()
 router.register("categories", CategoryViewSet, basename="category")
@@ -28,4 +34,8 @@ urlpatterns = [
     path("api/v1/dashboard/category-months/", CategoryMonthsView.as_view(), name="category-months"),
     path("api/v1/analytics/profile/", ProfileAnalyticsView.as_view(), name="profile-analytics"),
     path("api/v1/", include(router.urls)),
+    path("api/v1/transactions/import/preview/", SpreadsheetPreviewView.as_view(), name="spreadsheet-preview"),
+    path("api/v1/transactions/import/confirm/", SpreadsheetConfirmView.as_view(), name="spreadsheet-confirm"),
+    path("api/v1/transactions/export/", SpreadsheetExportView.as_view(), name="spreadsheet-export"),
+    path("api/v1/transactions/template/", SpreadsheetTemplateView.as_view(), name="spreadsheet-template"),
 ]

@@ -106,6 +106,26 @@ export default async function LancamentosPage({
             {totalCount} {totalCount === 1 ? "registro" : "registros"} •{" "}
             {totalPages > 1 && `Página ${page} de ${totalPages}`}
           </div>
+          <div className="flex gap-2 mt-4">
+            <Link
+              href="/lancamentos/importar"
+              className="btn btn--primary text-sm"
+            >
+              Importar Planilha
+            </Link>
+            <a
+              href={`/api/export?year=${new Date().getFullYear()}`}
+              className="btn btn--secondary text-sm"
+            >
+              Exportar
+            </a>
+            <a
+              href="/api/template"
+              className="btn btn--ghost text-sm"
+            >
+              Baixar Template
+            </a>
+          </div>
         </div>
 
         <Flash flash={flash} />

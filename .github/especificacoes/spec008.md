@@ -1,20 +1,26 @@
-# SPEC-009: Importação de Dados via Planilha (CSV/XLSX)
+# SPEC-008: Importação e Exportação de Planilha (Formato Legado XLSX)
 
 ## 1. Resumo Executivo
-Esta funcionalidade permite que o usuário importe em massa lançamentos financeiros através de arquivos de planilha (CSV ou XLSX), facilitando a migração de dados de outros sistemas ou faturas bancárias para a aplicação.
+Esta funcionalidade permite que o usuário importe, exporte e baixe templates de lançamentos financeiros seguindo o formato legado específico de planilha (.xlsx), que possui os dados fracionados em abas mensais e tabelas dinâmicas por categoria, facilitando a migração e backup no formato já familiar ao usuário.
 
 ## 2. Requisitos de Negócio
-- **Público-alvo:** Usuários que possuem grande volume de dados externos.
-- **Objetivo:** Reduzir o esforço manual de cadastro individual de lançamentos.
-- **Impacto:** Alta melhoria na experiência de onboarding do usuário.
+- **Público-alvo:** Usuários realizando migração do controle financeiro em planilhas retrocompatíveis.
+- **Objetivo:** Permitir o preenchimento offline, a migração inicial de todo o histórico financeiro e o backup contínuo respeitando o template adotado no passado.
+- **Impacto:** Redução crítica de perda de dados e fluidez na curva de adoção do novo sistema web.
 
 ## 3. Requisitos Funcionais (RF)
-- **RF001:** O sistema deve permitir o upload de arquivos nos formatos `.csv`, `.xls` e `.xlsx`.
-- **RF002:** O sistema deve fornecer um modelo (template) para download, garantindo que o usuário saiba quais colunas são necessárias.
-- **RF003:** O sistema deve validar os campos obrigatórios: Data, Descrição, Valor, Tipo (Receita/Despesa) e Categoria.
-- **RF004:** O sistema deve permitir o mapeamento manual de colunas caso o cabeçalho do arquivo do usuário não coincida com o esperado.
-- **RF005:** O sistema deve exibir um resumo prévio (preview) dos dados antes da confirmação final do processamento.
-- **RF006:** O sistema deve lidar com erros de validação linha a linha, informando claramente qual linha falhou e o motivo.
+- **RF001:** O sistema deve suportar parsing específico para arquivos `.xlsx` tolerando arquivos com abas mensais (Janeiro a Dezembro) parciais ou arquivos completos com todas as 12 abas mensais (além de ignorar abas de totalizadores como "Gastos e acompanhamentos").
+- **RF002:** Durante a leitura, o sistema deve iterar pelas abas (linhas de 3 a 160) localizando tabelas por meio das âncoras na mesma linha: ("Observação", "dia", "R$") e inferir a **Categoria** do lançamento procurando pelas 2 linhas logo acima desse cabeçalho.
+- **RF003:** O sistema deve combinar o nome da aba (que representa o Mês), e a coluna "dia" da tabela encontrada para compor a **Data** real da transação. O sistema deve deduzir o Ano (através do nome do arquivo ou solicitar como parâmetro na API/Interface).
+- **RF004:** As despesas listadas abaixo da âncora deverão ser criadas como lançamentos, respeitando a categoria inferida acima, consumindo as colunas "Observação" (descrição), "dia" e "R$" (valor), cessando a leitura daquela sub-tabela quando encontrar uma linha em branco.
+- **RF005:** O sistema deve possuir um endpoint de geração do modelo (template) vazio que reproduza essa mesma topologia de 12 abas mensais e tabelas por categorias ativas no banco.
+- **RF006:** O sistema deve permitir exportar (download) todos os lançamentos do banco compondo um novo `.xlsx` com todas as 12 abas geradas e o rateio de categorias idêntico.
+- **RF007:** O sistema **só deve salvar as transações no banco de dados após a confirmação explícita do usuário**.
+- **RF008:** A interface deve exibir na íntegra **todos os lançamentos extraídos** em formato de pré-visualização (preview) detalhada, para que o usuário possa verificar se todas as informações foram coletadas corretamente antes da persistência.
+- **RF009:** Durante a pré-visualização, o sistema deve alertar o usuário exibindo de forma destacada quaisquer informações inválidas ou inconsistências encontradas, incluindo:
+  - Data incompatível (ex: linha com mês diferente do mês correspondente à aba de onde o dado foi extraído);
+  - Valores negativos ou não-numéricos na coluna R$;
+  - Ausência de descrição/observação nas linhas mapeadas;
 
 ## 4. Requisitos Não Funcionais (RNF)
 - **RNF001:** O processamento de arquivos grandes (> 500 linhas) deve ser realizado de forma assíncrona (Celery).
@@ -23,33 +29,43 @@ Esta funcionalidade permite que o usuário importe em massa lançamentos finance
 
 ## 5. Fluxo da Interface (UX)
 1. **Navegação:** Usuário acessa "Lançamentos" > Botão "Importar Planilha".
-2. **Seleção:** Modal ou tela de upload para arrastar o arquivo.
-3. **Mapeamento:** Caso as colunas não sejam reconhecidas automaticamente, o usuário seleciona qual coluna da planilha corresponde a qual campo do sistema.
-4. **Resumo/Preview:** Tabela com os primeiros 5 itens e totalizadores para revisão.
-5. **Processamento:** Feedback visual de progresso (spinner ou barra de carregamento).
-6. **Conclusão:** Mensagem de sucesso detalhando quantos itens foram importados com êxito.
+2. **Seleção:** Modal ou tela de upload para fazer o upload do arquivo `.xlsx`.
+3. **Extração:** Ao carregar o arquivo, o backend realiza o scan em memória, **sem salvar no banco**.
+4. **Visualização Total:** A interface exibe a tabela completa com **todos** os lançamentos interceptados nas várias abas.
+5. **Sinalização de Inconsistências:** Erros são pintados junto à linha na tabela (ex: coluna dia com data incongruente em relação à aba, ou valores negativos) proibindo ou alertando salvamento em lote.
+6. **Confirmação Expressa:** O usuário confere visualmente e deve ativar deliberadamente o botão "Confirmar e Salvar X Lançamentos" para gravar oficialmente no banco de dados.
+7. **Conclusão:** Mensagem de sucesso detalhando os itens salvos.
 
 ## 6. Diagrama de Fluxo (Mermaid)
 ```mermaid
 graph TD
-    A[Início] --> B[Upload do Arquivo]
-    B --> C{Formato Válido?}
-    C -- Não --> D[Erro: Formato Inválido]
-    C -- Sim --> E[Mapeamento de Colunas]
-    E --> F[Preview dos Dados]
-    F --> G{Confirmar?}
-    G -- Sim --> H[Processar Importação]
-    H --> I[Exibir Resultado Final]
-    G -- Não --> J[Cancelar/Voltar]
+    A[Ação do Usuário] --> B{Tipo?}
+    B -- Importação --> C[Upload do Arquivo Legacy XLSX]
+    C --> D[Parser: Scan de Abas Mensais e Tabelas Âncora]
+    D --> E{Layout Reconhecido?}
+    E -- Não --> F[Erro: Layout Inválido]
+    E -- Sim --> G[Preview dos Dados Extraídos]
+    G --> H{Confirmar?}
+    H -- Sim --> I[Task Celery: Importar Lançamentos]
+    H -- Não --> J[Cancelar]
+    B -- Exportar / Template --> K[Task Celery: Construir XLSX]
+    K --> L[Disponibilizar Download]
 ```
 
 ## 7. Modelagem de Dados e API
-- **Endpoint:** `POST /api/transactions/import/`
-- **Payload:** Multipart Form Data (arquivo + metadados de mapeamento).
-- **Resposta:** JSON com `task_id` (se assíncrono) ou resumo imediato.
+- **Endpoint Importação:** `POST /api/transactions/import/`
+  - **Payload:** Multipart Form Data (arquivo `.xlsx`).
+  - **Resposta:** JSON com Preview dos dados extraídos ou submissão via `task_id`.
+- **Endpoint Exportação:** `GET /api/transactions/export/`
+  - **Payload:** Query params de filtros/ano.
+  - **Resposta:** `task_id` gerado ou Binário `.xlsx` compilado com as abas por mês.
+- **Endpoint Template:** `GET /api/transactions/template/`
+  - **Resposta:** O download direto do XLSX pré-formatado apenas com cabeçalhos padrão.
 
 ## 8. Critérios de Aceite
-- O usuário consegue baixar o template `.csv`.
-- O sistema importa 100 linhas em menos de 10 segundos.
-- Se a categoria não existir, o sistema deve sugerir a criação ou retornar erro específico.
-- Registros duplicados (mesmo dia, valor e descrição) devem ser sinalizados como alertas.
+- O usuário consegue baixar o template `.xlsx` formatado e vazio através do sistema.
+- A aplicação apresenta uma visualização prévia completa (preview) listando absolutamente todas as linhas lidas para que o usuário verifique.
+- Lançamentos constando datas inconsistentes com a aba (ex: dia 32 ou aba "Janeiro" e data inserida de fevereiro) ou valores negativos exibem erros críticos na pré-visualização, alertando o usuário.
+- Nenhuma modificação é feita no banco de dados até que a ação seja aprovada pelo clique de "Confirmar".
+- Se a categoria referenciada não existir, o sistema deve sugerir a criação dela durante a tela de preview.
+- Registros duplicados (mesmo dia, valor e descrição) detectados devem ser sinalizados como alertas antes da confirmação.

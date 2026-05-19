@@ -205,3 +205,28 @@ export interface ActionState<T = null> {
   errors?: FormErrors;
   message?: string;
 }
+
+// ─── Importação de Planilha ───────────────────────────────
+export interface ImportPreviewRow {
+  row_number: number;
+  sheet: string;
+  category_name: string;
+  description: string;
+  day: number | null;
+  amount: string | null;
+  date: string | null;
+  errors: string[];
+  is_valid: boolean;
+  category_exists: boolean;
+}
+
+export interface ImportPreviewResult {
+  sheets_found: string[];
+  categories_found: string[];
+  missing_categories: string[];
+  total: number;
+  valid_count: number;
+  error_count: number;
+  rows: ImportPreviewRow[];
+}
+
