@@ -1,5 +1,9 @@
+import logging
+
 from django.http import HttpResponse
 from rest_framework import permissions, status, viewsets
+
+logger = logging.getLogger(__name__)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -174,13 +178,20 @@ class SpreadsheetConfirmView(APIView):
         ]
 
         if len(valid_rows) > LARGE_FILE_THRESHOLD:
-            task = import_transactions_task.delay(request.user.pk, payload_rows, category_map)
-            return Response(
-                {"task_id": task.id, "queued": len(valid_rows)},
-                status=status.HTTP_202_ACCEPTED,
-            )
+            try:
+                from kombu.exceptions import OperationalError as BrokerError
+                task = import_transactions_task.delay(request.user.pk, payload_rows, category_map)
+                return Response(
+                    {"task_id": task.id, "queued": len(valid_rows)},
+                    status=status.HTTP_202_ACCEPTED,
+                )
+            except BrokerError:
+                logger.warning(
+                    "Broker Celery indisponível — processando %d linhas de forma síncrona.",
+                    len(valid_rows),
+                )
 
-        # Importação síncrona para arquivos pequenos
+        # Importação síncrona: arquivos pequenos ou fallback quando broker está fora
         result = import_transactions_task(request.user.pk, payload_rows, category_map)
         return Response({"created": result["created"], "skipped": result["skipped"]}, status=status.HTTP_201_CREATED)
 
