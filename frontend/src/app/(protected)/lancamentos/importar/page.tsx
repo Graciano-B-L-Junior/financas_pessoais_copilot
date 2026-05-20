@@ -10,54 +10,53 @@ export default async function ImportarPlanilhaPage() {
   const flash = await consumeFlash();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <Flash flash={flash} />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Importar Planilha</h1>
-          <p className="text-sm text-gray-500 mt-1">
+    <main className="container page-shell" style={{ display: "grid", gap: "1.5rem" }}>
+      <section className="surface panel">
+        <div className="page-heading">
+          <span className="eyebrow">Importação</span>
+          <h1>Importar Planilha de Lançamentos</h1>
+          <p>
             Importe seus lançamentos a partir de um arquivo .xlsx no formato de controle mensal de
             gastos (abas por mês, tabelas por categoria).
           </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
+            <a href="/api/template" className="btn btn--primary text-sm">
+              Baixar Template
+            </a>
+            <Link href="/lancamentos" className="btn btn--secondary text-sm">
+              Voltar
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <a
-            href="/api/template"
-            className="text-sm border rounded px-3 py-1.5 text-gray-700 hover:bg-gray-50"
-          >
-            Baixar template vazio
-          </a>
-          <Link
-            href="/lancamentos"
-            className="text-sm border rounded px-3 py-1.5 text-gray-700 hover:bg-gray-50"
-          >
-            Voltar
-          </Link>
-        </div>
-      </div>
 
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h2 className="text-base font-medium mb-4">Passo 1 — Selecione o arquivo</h2>
+        <Flash flash={flash ?? null} />
+      </section>
+
+      <section className="surface panel">
+        <div className="page-heading">
+          <span className="eyebrow">Passo 1</span>
+          <h2 className="section-title">Selecione o arquivo</h2>
+        </div>
         <SpreadsheetImporter />
-      </div>
+      </section>
 
-      {/* Instruções de formato */}
-      <details className="rounded border bg-gray-50 p-4 text-sm">
-        <summary className="cursor-pointer font-medium text-gray-700">
-          Formato esperado da planilha
-        </summary>
-        <ul className="mt-3 space-y-1 text-gray-600 list-disc list-inside">
-          <li>Arquivo .xlsx com abas mensais nomeadas como &quot;Gastos Janeiro&quot;, &quot;Gastos Fevereiro&quot; etc.</li>
-          <li>
-            Cada aba contém tabelas por categoria dispostas lado a lado com as colunas:{" "}
-            <strong>Observação</strong>, <strong>dia</strong> e <strong>R$</strong>.
-          </li>
-          <li>O nome da categoria fica 1 ou 2 linhas acima dessas colunas.</li>
-          <li>O ano é detectado automaticamente pelo nome do arquivo (ex: &quot;Gastos 2024.xlsx&quot;).</li>
-          <li>Abas faltantes são ignoradas — não é necessário ter todos os meses.</li>
-        </ul>
-      </details>
-    </div>
+      <section className="surface panel">
+        <details className="details-group">
+          <summary>Formato esperado da planilha</summary>
+          <div className="details-content">
+            <ul className="list-disc list-inside space-y-2 text-sm">
+              <li>Arquivo .xlsx com abas mensais nomeadas como "Gastos Janeiro", "Gastos Fevereiro" etc.</li>
+              <li>
+                Cada aba contém tabelas por categoria dispostas lado a lado com as colunas:{" "}
+                <strong>Observação</strong>, <strong>dia</strong> e <strong>R$</strong>.
+              </li>
+              <li>O nome da categoria fica 1 ou 2 linhas acima dessas colunas.</li>
+              <li>O ano é detectado automaticamente pelo nome do arquivo (ex: "Gastos 2024.xlsx").</li>
+              <li>Abas faltantes são ignoradas — não é necessário ter todos os meses.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+    </main>
   );
 }

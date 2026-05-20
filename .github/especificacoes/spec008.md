@@ -21,6 +21,8 @@ Esta funcionalidade permite que o usuário importe, exporte e baixe templates de
   - Data incompatível (ex: linha com mês diferente do mês correspondente à aba de onde o dado foi extraído);
   - Valores negativos ou não-numéricos na coluna R$;
   - Ausência de descrição/observação nas linhas mapeadas;
+  - Categorias referenciadas na planilha que **não existem** no banco de dados do usuário.
+- **RF010:** Ao término da análise do arquivo, caso uma ou mais categorias da planilha não existam no sistema, a interface deve exibir um bloco de alerta destacado **antes** da tabela de pré-visualização, listando cada categoria faltante e oferecendo um link direto para a tela de gerenciamento de categorias. Os lançamentos vinculados a essas categorias faltantes devem ser sinalizados na tabela com status de aviso (warning), impedindo que sejam confirmados individualmente até que a categoria seja criada e a planilha seja reanalisada, **ou** permitindo que o usuário opte por ignorá-los e confirmar apenas os lançamentos com categorias válidas.
 
 ## 4. Requisitos Não Funcionais (RNF)
 - **RNF001:** O processamento de arquivos grandes (> 500 linhas) deve ser realizado de forma assíncrona (Celery).
@@ -33,8 +35,13 @@ Esta funcionalidade permite que o usuário importe, exporte e baixe templates de
 3. **Extração:** Ao carregar o arquivo, o backend realiza o scan em memória, **sem salvar no banco**.
 4. **Visualização Total:** A interface exibe a tabela completa com **todos** os lançamentos interceptados nas várias abas.
 5. **Sinalização de Inconsistências:** Erros são pintados junto à linha na tabela (ex: coluna dia com data incongruente em relação à aba, ou valores negativos) proibindo ou alertando salvamento em lote.
-6. **Confirmação Expressa:** O usuário confere visualmente e deve ativar deliberadamente o botão "Confirmar e Salvar X Lançamentos" para gravar oficialmente no banco de dados.
-7. **Conclusão:** Mensagem de sucesso detalhando os itens salvos.
+5a. **Categorias Faltantes:** Se ao término da análise existirem categorias da planilha não cadastradas no sistema, a interface exibe um **bloco de alerta destacado** (acima da tabela de preview) com:
+    - A lista de categorias não encontradas;
+    - Um link direto para a tela de criação/gerenciamento de categorias (`/categorias`);
+    - Uma instrução clara: *"Crie as categorias listadas e reanalize a planilha, ou prossiga confirmando apenas os lançamentos com categorias válidas."*
+    - Os lançamentos afetados aparecem marcados com badge `Categoria inválida` na coluna de status.
+6. **Confirmação Expressa:** O usuário confere visualmente e deve ativar deliberadamente o botão "Confirmar e Salvar X Lançamentos" para gravar oficialmente no banco de dados. Lançamentos com categoria faltante são **excluídos automaticamente** do lote de confirmação, salvo decisão explícita do usuário.
+7. **Conclusão:** Mensagem de sucesso detalhando os itens salvos e, se houver, quantos foram ignorados por categoria faltante.
 
 ## 6. Diagrama de Fluxo (Mermaid)
 ```mermaid
@@ -67,5 +74,7 @@ graph TD
 - A aplicação apresenta uma visualização prévia completa (preview) listando absolutamente todas as linhas lidas para que o usuário verifique.
 - Lançamentos constando datas inconsistentes com a aba (ex: dia 32 ou aba "Janeiro" e data inserida de fevereiro) ou valores negativos exibem erros críticos na pré-visualização, alertando o usuário.
 - Nenhuma modificação é feita no banco de dados até que a ação seja aprovada pelo clique de "Confirmar".
-- Se a categoria referenciada não existir, o sistema deve sugerir a criação dela durante a tela de preview.
+- Se uma ou mais categorias referenciadas na planilha não existirem no banco, o sistema exibe um bloco de alerta destacado **acima** da tabela de preview, listando as categorias faltantes e fornecendo link direto para `/categorias`.
+- Os lançamentos com categoria faltante recebem badge de aviso na tabela de preview e são excluídos do lote de confirmação por padrão.
+- O usuário pode optar por prosseguir confirmando apenas os lançamentos com categorias válidas, ou cancelar, criar as categorias e reanalisar o arquivo.
 - Registros duplicados (mesmo dia, valor e descrição) detectados devem ser sinalizados como alertas antes da confirmação.

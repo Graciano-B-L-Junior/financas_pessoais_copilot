@@ -10,7 +10,11 @@ export function FieldErrors({ errors, field }: Props) {
   if (!messages.length) return null;
 
   return (
-    <ul className="field-errors" role="alert">
+    <ul 
+      className="field-errors" 
+      role="alert" 
+      aria-live="polite"
+    >
       {messages.map((msg, i) => (
         <li key={i} className="field-error">
           {msg}
