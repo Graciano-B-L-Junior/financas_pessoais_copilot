@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 import { importPreviewAction, importConfirmAction } from "@/app/actions/spreadsheet";
+import { createCategoriesBulkAction } from "@/app/actions/categories";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import type { ActionState, ImportPreviewResult, ImportPreviewRow } from "@/types";
 
@@ -20,8 +21,32 @@ export function SpreadsheetImporter() {
 
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [createPending, startCreateTransition] = useTransition();
+  const [createResult, setCreateResult] = useState<{ created: number; skipped: number } | null>(null);
 
   const preview = previewState.ok ? previewState.data! : null;
+
+  // Linhas confirmáveis = sem erros E com categoria existente
+  const confirmableRows = preview
+    ? preview.rows.filter((r) => r.is_valid && r.category_exists)
+    : [];
+
+  function handleAutoCreate() {
+    if (!preview?.missing_categories.length) return;
+    setCreateResult(null);
+    startCreateTransition(async () => {
+      const result = await createCategoriesBulkAction(preview.missing_categories);
+      if (result.ok && result.data) {
+        setCreateResult(result.data);
+        // Re-analisa o arquivo automaticamente com as categorias agora criadas
+        if (selectedFile) {
+          const fd = new FormData();
+          fd.append("file", selectedFile);
+          previewAction(fd);
+        }
+      }
+    });
+  }
 
   return (
     <div style={{ display: "grid", gap: "3rem" }}>
@@ -87,16 +112,46 @@ export function SpreadsheetImporter() {
             />
           </div>
 
-          {/* Categorias faltantes */}
+          {/* ── Bloco de categorias faltantes (RF010) ── */}
           {preview.missing_categories.length > 0 && (
-            <div className="alert alert--warning">
-              <strong>Atenção:</strong> As seguintes categorias não existem no sistema e serão
-              ignoradas:
-              <ul className="list-disc list-inside mt-2">
+            <div className="alert alert--warning" style={{ borderLeftWidth: "4px" }}>
+              <strong style={{ display: "block", marginBottom: "0.75rem" }}>
+                Categorias não encontradas no sistema
+              </strong>
+              <p style={{ margin: "0 0 0.75rem 0" }}>
+                As seguintes categorias estão na planilha mas não existem no seu cadastro.
+                Os lançamentos vinculados a elas foram{" "}
+                <strong>excluídos do lote de confirmação</strong>.
+              </p>
+              <ul style={{ margin: "0 0 1rem 1.25rem", padding: 0 }}>
                 {preview.missing_categories.map((c) => (
-                  <li key={c}>{c}</li>
+                  <li key={c} style={{ marginBottom: "0.25rem" }}>{c}</li>
                 ))}
               </ul>
+              {createResult ? (
+                <p style={{ margin: 0, color: "var(--success)", fontWeight: 500 }}>
+                  ✓ {createResult.created} categoria(s) criada(s) como <em>Despesa</em>.
+                  {createResult.skipped > 0 && ` ${createResult.skipped} ignorada(s) (já existem).`}
+                  {" "}Re-analisando o arquivo...
+                </p>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={handleAutoCreate}
+                    disabled={createPending}
+                    className="btn btn--primary"
+                  >
+                    {createPending
+                      ? "Criando categorias..."
+                      : `Criar ${preview.missing_categories.length} categoria(s) automaticamente`}
+                  </button>
+                  <span style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
+                    Serão criadas como <strong>Despesa</strong>. Você pode editar o tipo depois em{" "}
+                    <a href="/categorias">Categorias</a>.
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -105,7 +160,7 @@ export function SpreadsheetImporter() {
             <table className="table">
               <thead>
                 <tr>
-                  <th style={{ width: "80px" }}>Status</th>
+                  <th style={{ width: "130px" }}>Status</th>
                   <th>Aba</th>
                   <th>Categoria</th>
                   <th>Descrição</th>
@@ -123,7 +178,7 @@ export function SpreadsheetImporter() {
           </div>
 
           {/* Ações */}
-          <div className="flex gap-2">
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
             <button
               type="button"
               onClick={() => window.location.reload()}
@@ -132,9 +187,9 @@ export function SpreadsheetImporter() {
               Cancelar
             </button>
 
-            {preview.valid_count > 0 && (
+            {confirmableRows.length > 0 && (
               <form action={confirmAction}>
-                <input type="hidden" name="rows" value={JSON.stringify(preview.rows)} />
+                <input type="hidden" name="rows" value={JSON.stringify(confirmableRows)} />
                 <input type="hidden" name="category_map" value="{}" />
                 <button
                   type="submit"
@@ -143,9 +198,15 @@ export function SpreadsheetImporter() {
                 >
                   {confirmPending
                     ? "Salvando..."
-                    : `Confirmar e salvar ${preview.valid_count} lançamento(s)`}
+                    : `Confirmar e salvar ${confirmableRows.length} lançamento(s)`}
                 </button>
               </form>
+            )}
+
+            {confirmableRows.length === 0 && (
+              <p style={{ margin: 0, color: "var(--danger)", fontWeight: 500, fontSize: "0.95rem" }}>
+                Nenhum lançamento válido para confirmar. Crie as categorias e reanalize a planilha.
+              </p>
             )}
           </div>
 
@@ -177,21 +238,29 @@ function SummaryCard({
 
 function PreviewRow({ row }: { row: ImportPreviewRow }) {
   const hasError = row.errors.length > 0;
-  const statusClass = hasError ? "badge--danger" : "badge--success";
-  const statusText = hasError ? "Erro" : "OK";
+  const missingCategory = !row.category_exists;
+
+  let badgeClass: string;
+  let badgeText: string;
+
+  if (hasError) {
+    badgeClass = "badge--danger";
+    badgeText = "Erro";
+  } else if (missingCategory) {
+    badgeClass = "badge--warning";
+    badgeText = "Cat. inválida";
+  } else {
+    badgeClass = "badge--success";
+    badgeText = "OK";
+  }
 
   return (
-    <tr>
+    <tr style={missingCategory ? { opacity: 0.65 } : undefined}>
       <td>
-        <span className={`badge ${statusClass}`}>{statusText}</span>
+        <span className={`badge ${badgeClass}`}>{badgeText}</span>
       </td>
       <td>{row.sheet}</td>
-      <td>
-        {row.category_name}
-        {!row.category_exists && (
-          <span className="muted" style={{ marginLeft: "0.5rem" }}>(não cadastrada)</span>
-        )}
-      </td>
+      <td>{row.category_name}</td>
       <td>{row.description || "—"}</td>
       <td>{row.date ?? `dia ${row.day}`}</td>
       <td style={{ textAlign: "right", fontFamily: "monospace" }}>
@@ -201,7 +270,9 @@ function PreviewRow({ row }: { row: ImportPreviewRow }) {
             )
           : "—"}
       </td>
-      <td className="muted text-sm">{row.errors.join(" • ")}</td>
+      <td style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
+        {hasError ? row.errors.join(" • ") : missingCategory ? "Categoria não cadastrada no sistema" : "—"}
+      </td>
     </tr>
   );
 }

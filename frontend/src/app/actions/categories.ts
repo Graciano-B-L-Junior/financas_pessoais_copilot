@@ -81,3 +81,27 @@ export async function deleteCategoryAction(id: number | string): Promise<void> {
   revalidatePath("/categorias");
   redirect("/categorias");
 }
+
+export async function createCategoriesBulkAction(
+  names: string[]
+): Promise<ActionState<{ created: number; skipped: number }>> {
+  let created = 0;
+  let skipped = 0;
+
+  for (const name of names) {
+    const response = await api.categories.create({
+      name,
+      type: "despesa",
+      description: "",
+      is_active: true,
+    });
+    if (response.status === 201) {
+      created++;
+    } else {
+      skipped++;
+    }
+  }
+
+  revalidatePath("/categorias");
+  return { ok: true, data: { created, skipped } };
+}

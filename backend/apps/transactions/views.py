@@ -138,8 +138,8 @@ class SpreadsheetConfirmView(APIView):
         if not rows:
             return Response({"detail": "Nenhum dado para importar."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Filtrar apenas linhas válidas
-        valid_rows = [r for r in rows if not r.get("errors")]
+        # Filtrar apenas linhas válidas: sem erros e com categoria existente
+        valid_rows = [r for r in rows if not r.get("errors") and r.get("category_exists", True)]
 
         if not valid_rows:
             return Response(
