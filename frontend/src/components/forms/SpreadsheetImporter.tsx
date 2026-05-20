@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { importPreviewAction, importConfirmAction } from "@/app/actions/spreadsheet";
 import { createCategoriesBulkAction } from "@/app/actions/categories";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -23,8 +23,16 @@ export function SpreadsheetImporter() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [createPending, startCreateTransition] = useTransition();
   const [createResult, setCreateResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
 
   const preview = previewState.ok ? previewState.data! : null;
+
+  // Inicializa / reseta a seleção sempre que uma nova análise retorna categorias faltantes
+  const missingCats = preview?.missing_categories;
+  useEffect(() => {
+    setSelectedCategories(new Set(missingCats ?? []));
+    setCreateResult(null);
+  }, [missingCats]);
 
   // Linhas confirmáveis = sem erros E com categoria existente
   const confirmableRows = preview
@@ -32,10 +40,9 @@ export function SpreadsheetImporter() {
     : [];
 
   function handleAutoCreate() {
-    if (!preview?.missing_categories.length) return;
-    setCreateResult(null);
+    if (!selectedCategories.size) return;
     startCreateTransition(async () => {
-      const result = await createCategoriesBulkAction(preview.missing_categories);
+      const result = await createCategoriesBulkAction([...selectedCategories]);
       if (result.ok && result.data) {
         setCreateResult(result.data);
         // Re-analisa o arquivo automaticamente com as categorias agora criadas
@@ -112,22 +119,18 @@ export function SpreadsheetImporter() {
             />
           </div>
 
-          {/* ── Bloco de categorias faltantes (RF010) ── */}
+          {/* ── Painel de categorias faltantes com checkbox (RF010 / RF011) ── */}
           {preview.missing_categories.length > 0 && (
             <div className="alert alert--warning" style={{ borderLeftWidth: "4px" }}>
-              <strong style={{ display: "block", marginBottom: "0.75rem" }}>
+              <strong style={{ display: "block", marginBottom: "0.5rem" }}>
                 Categorias não encontradas no sistema
               </strong>
-              <p style={{ margin: "0 0 0.75rem 0" }}>
-                As seguintes categorias estão na planilha mas não existem no seu cadastro.
-                Os lançamentos vinculados a elas foram{" "}
-                <strong>excluídos do lote de confirmação</strong>.
+              <p style={{ margin: "0 0 1rem 0", fontSize: "0.9rem" }}>
+                As categorias abaixo estão na planilha mas não existem no seu cadastro.
+                Selecione quais deseja criar ou{" "}
+                <a href="/categorias">gerencie suas categorias</a>.
               </p>
-              <ul style={{ margin: "0 0 1rem 1.25rem", padding: 0 }}>
-                {preview.missing_categories.map((c) => (
-                  <li key={c} style={{ marginBottom: "0.25rem" }}>{c}</li>
-                ))}
-              </ul>
+
               {createResult ? (
                 <p style={{ margin: 0, color: "var(--success)", fontWeight: 500 }}>
                   ✓ {createResult.created} categoria(s) criada(s) como <em>Despesa</em>.
@@ -135,22 +138,72 @@ export function SpreadsheetImporter() {
                   {" "}Re-analisando o arquivo...
                 </p>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={handleAutoCreate}
-                    disabled={createPending}
-                    className="btn btn--primary"
-                  >
-                    {createPending
-                      ? "Criando categorias..."
-                      : `Criar ${preview.missing_categories.length} categoria(s) automaticamente`}
-                  </button>
-                  <span style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
-                    Serão criadas como <strong>Despesa</strong>. Você pode editar o tipo depois em{" "}
-                    <a href="/categorias">Categorias</a>.
-                  </span>
-                </div>
+                <>
+                  {/* Controle select-all + contador */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", marginBottom: "0.75rem" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.875rem", cursor: "pointer", fontWeight: 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.size === preview.missing_categories.length}
+                        ref={(el) => {
+                          if (el)
+                            el.indeterminate =
+                              selectedCategories.size > 0 &&
+                              selectedCategories.size < preview.missing_categories.length;
+                        }}
+                        onChange={(e) =>
+                          setSelectedCategories(
+                            e.target.checked ? new Set(preview.missing_categories) : new Set()
+                          )
+                        }
+                      />
+                      Selecionar todas
+                    </label>
+                    <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
+                      {selectedCategories.size} de {preview.missing_categories.length} selecionada(s)
+                    </span>
+                  </div>
+
+                  {/* Lista de checkboxes individuais */}
+                  <ul style={{ margin: "0 0 1rem 0", padding: 0, listStyle: "none", display: "grid", gap: "0.4rem" }}>
+                    {preview.missing_categories.map((c) => (
+                      <li key={c}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.has(c)}
+                            onChange={(e) =>
+                              setSelectedCategories((prev) => {
+                                const next = new Set(prev);
+                                e.target.checked ? next.add(c) : next.delete(c);
+                                return next;
+                              })
+                            }
+                          />
+                          {c}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Ações */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={handleAutoCreate}
+                      disabled={createPending || selectedCategories.size === 0}
+                      className="btn btn--primary"
+                    >
+                      {createPending
+                        ? "Criando categorias..."
+                        : `Criar ${selectedCategories.size} categoria(s) selecionada(s)`}
+                    </button>
+                    <span style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
+                      Serão criadas como <strong>Despesa</strong>. Edite o tipo depois em{" "}
+                      <a href="/categorias">Categorias</a>.
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           )}

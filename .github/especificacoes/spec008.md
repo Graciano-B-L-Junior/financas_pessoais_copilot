@@ -22,7 +22,13 @@ Esta funcionalidade permite que o usuário importe, exporte e baixe templates de
   - Valores negativos ou não-numéricos na coluna R$;
   - Ausência de descrição/observação nas linhas mapeadas;
   - Categorias referenciadas na planilha que **não existem** no banco de dados do usuário.
-- **RF010:** Ao término da análise do arquivo, caso uma ou mais categorias da planilha não existam no sistema, a interface deve exibir um bloco de alerta destacado **antes** da tabela de pré-visualização, listando cada categoria faltante e oferecendo um link direto para a tela de gerenciamento de categorias. Os lançamentos vinculados a essas categorias faltantes devem ser sinalizados na tabela com status de aviso (warning), impedindo que sejam confirmados individualmente até que a categoria seja criada e a planilha seja reanalisada, **ou** permitindo que o usuário opte por ignorá-los e confirmar apenas os lançamentos com categorias válidas.
+- **RF010:** Ao término da análise do arquivo, caso uma ou mais categorias da planilha não existam no sistema, a interface deve exibir um bloco de alerta destacado **antes** da tabela de pré-visualização, listando cada categoria faltante com um **checkbox individual** de seleção. Os lançamentos vinculados a essas categorias faltantes devem ser sinalizados na tabela com status de aviso (warning), impedindo que sejam confirmados até que a categoria seja criada e a planilha reanalisada, **ou** permitindo que o usuário opte por ignorá-los e confirmar apenas os lançamentos com categorias válidas.
+- **RF011:** O painel de categorias faltantes deve oferecer:
+  - Um **checkbox por categoria** (todos marcados por padrão) permitindo que o usuário escolha individualmente quais quer criar;
+  - Um controle de **"Selecionar todas" / "Desmarcar todas"** para ação em lote;
+  - Um botão **"Criar categorias selecionadas"** que cria apenas as categorias marcadas como tipo *Despesa* e, ao término, reanalisada automaticamente a planilha sem nova intervenção do usuário;
+  - Categorias desmarcadas permanecem faltantes: seus lançamentos continuam com badge de aviso e são excluídos do lote de confirmação;
+  - Um link secundário **"Gerenciar categorias"** (`/categorias`) para o usuário que preferir configurar tipo e demais atributos antes de criar.
 
 ## 4. Requisitos Não Funcionais (RNF)
 - **RNF001:** O processamento de arquivos grandes (> 500 linhas) deve ser realizado de forma assíncrona (Celery).
@@ -35,11 +41,14 @@ Esta funcionalidade permite que o usuário importe, exporte e baixe templates de
 3. **Extração:** Ao carregar o arquivo, o backend realiza o scan em memória, **sem salvar no banco**.
 4. **Visualização Total:** A interface exibe a tabela completa com **todos** os lançamentos interceptados nas várias abas.
 5. **Sinalização de Inconsistências:** Erros são pintados junto à linha na tabela (ex: coluna dia com data incongruente em relação à aba, ou valores negativos) proibindo ou alertando salvamento em lote.
-5a. **Categorias Faltantes:** Se ao término da análise existirem categorias da planilha não cadastradas no sistema, a interface exibe um **bloco de alerta destacado** (acima da tabela de preview) com:
-    - A lista de categorias não encontradas;
-    - Um link direto para a tela de criação/gerenciamento de categorias (`/categorias`);
-    - Uma instrução clara: *"Crie as categorias listadas e reanalize a planilha, ou prossiga confirmando apenas os lançamentos com categorias válidas."*
-    - Os lançamentos afetados aparecem marcados com badge `Categoria inválida` na coluna de status.
+5a. **Categorias Faltantes — Painel de Seleção via Checkbox:** Se ao término da análise existirem categorias da planilha não cadastradas no sistema, a interface exibe um **bloco de alerta destacado** (acima da tabela de preview) com:
+    - Um **checkbox por categoria faltante** (todos marcados por padrão), permitindo seleção individual;
+    - Um controle de **"Selecionar todas" / "Desmarcar todas"** para ação em lote;
+    - Contador dinâmico exibindo quantas categorias estão selecionadas (ex: *"3 de 5 selecionadas"*);
+    - Botão principal **"Criar categorias selecionadas"**: cria as marcadas como tipo *Despesa* e reanalisada automaticamente o arquivo ao final;
+    - Link secundário **"Gerenciar categorias"** → `/categorias` para quem preferir definir tipo antes de criar;
+    - Instrução contextual: *"Selecione as categorias que deseja criar e clique em Criar, ou prossiga confirmando apenas os lançamentos com categorias já válidas."*
+    - Os lançamentos afetados pelas categorias faltantes (independente de seleção) aparecem marcados com badge `Categoria inválida` na coluna de status.
 6. **Confirmação Expressa:** O usuário confere visualmente e deve ativar deliberadamente o botão "Confirmar e Salvar X Lançamentos" para gravar oficialmente no banco de dados. Lançamentos com categoria faltante são **excluídos automaticamente** do lote de confirmação, salvo decisão explícita do usuário.
 7. **Conclusão:** Mensagem de sucesso detalhando os itens salvos e, se houver, quantos foram ignorados por categoria faltante.
 
@@ -51,10 +60,16 @@ graph TD
     C --> D[Parser: Scan de Abas Mensais e Tabelas Âncora]
     D --> E{Layout Reconhecido?}
     E -- Não --> F[Erro: Layout Inválido]
-    E -- Sim --> G[Preview dos Dados Extraídos]
-    G --> H{Confirmar?}
-    H -- Sim --> I[Task Celery: Importar Lançamentos]
-    H -- Não --> J[Cancelar]
+    E -- Sim --> G{Categorias faltantes?}
+    G -- Não --> H[Preview dos Dados Extraídos]
+    G -- Sim --> P[Painel de Seleção via Checkbox]
+    P --> Q{Usuário seleciona categorias}
+    Q -- Criar selecionadas --> R[Criar categorias como Despesa]
+    R --> D
+    Q -- Ignorar / Prosseguir --> H
+    H --> S{Confirmar?}
+    S -- Sim --> I[Task Celery: Importar Lançamentos]
+    S -- Não --> J[Cancelar]
     B -- Exportar / Template --> K[Task Celery: Construir XLSX]
     K --> L[Disponibilizar Download]
 ```
@@ -77,4 +92,7 @@ graph TD
 - Se uma ou mais categorias referenciadas na planilha não existirem no banco, o sistema exibe um bloco de alerta destacado **acima** da tabela de preview, listando as categorias faltantes e fornecendo link direto para `/categorias`.
 - Os lançamentos com categoria faltante recebem badge de aviso na tabela de preview e são excluídos do lote de confirmação por padrão.
 - O usuário pode optar por prosseguir confirmando apenas os lançamentos com categorias válidas, ou cancelar, criar as categorias e reanalisar o arquivo.
+- O painel de categorias faltantes exibe um checkbox por categoria, todos marcados por padrão, com controle de "Selecionar todas / Desmarcar todas" e contador dinâmico (ex: "3 de 5 selecionadas").
+- Ao clicar em "Criar categorias selecionadas", apenas as categorias marcadas são criadas como tipo *Despesa* e a planilha é reanalisada automaticamente, sem exigir nova interação do usuário.
+- Categorias desmarcadas pelo usuário permanecem faltantes: seus lançamentos conservam o badge `Categoria inválida` e são excluídos do lote de confirmação.
 - Registros duplicados (mesmo dia, valor e descrição) detectados devem ser sinalizados como alertas antes da confirmação.

@@ -197,7 +197,7 @@ def parse_xlsx(file: IO[bytes], filename: str = "", year: int | None = None) -> 
             rows_data[row_idx] = list(row)
 
         # Encontrar âncoras de tabelas
-        anchor_positions: list[tuple[int, int, str]] = []  # (row_idx, col_idx_1based, category_name)
+        anchor_positions: list[tuple[int, int, int, int, str]] = []  # (row_idx, obs_col, dia_col, valor_col, category_name)
         for row_idx, row_cells in rows_data.items():
             row_values = tuple(c.value for c in row_cells)
             if not _is_anchor_row(row_values):
@@ -206,17 +206,22 @@ def parse_xlsx(file: IO[bytes], filename: str = "", year: int | None = None) -> 
             for col_offset, cell in enumerate(row_cells):
                 if _normalize(cell.value) == "observação":
                     col_1based = cell.column
+                    # Localizar "dia" e "R$" na mesma linha âncora após obs_col
+                    dia_col = next(
+                        (c.column for c in row_cells if _normalize(c.value) == "dia" and c.column > col_1based),
+                        col_1based + 1,
+                    )
+                    valor_col = next(
+                        (c.column for c in row_cells if _normalize(c.value) == "r$" and c.column > col_1based),
+                        col_1based + 2,
+                    )
                     cat = _find_category(wb[sheet_name], row_idx, col_1based)
                     if cat:
                         all_categories.add(cat)
-                        anchor_positions.append((row_idx, col_1based, cat))
+                        anchor_positions.append((row_idx, col_1based, dia_col, valor_col, cat))
 
         # Para cada âncora, extrair os lançamentos abaixo
-        for anchor_row, obs_col, category_name in anchor_positions:
-            # Colunas: Observação=obs_col, dia=obs_col+1, R$=obs_col+2
-            # (baseado no padrão confirmado na planilha real)
-            dia_col = obs_col + 1
-            valor_col = obs_col + 2
+        for anchor_row, obs_col, dia_col, valor_col, category_name in anchor_positions:
 
             data_row_start = anchor_row + 1
             for row_idx in range(data_row_start, SCAN_MAX_ROW + 1):
