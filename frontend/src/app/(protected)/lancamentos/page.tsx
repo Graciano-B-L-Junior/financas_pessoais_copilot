@@ -106,7 +106,7 @@ export default async function LancamentosPage({
             {totalCount} {totalCount === 1 ? "registro" : "registros"} •{" "}
             {totalPages > 1 && `Página ${page} de ${totalPages}`}
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="grid-3">
             <Link
               href="/lancamentos/importar"
               className="btn btn--primary text-sm"

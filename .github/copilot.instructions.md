@@ -1,6 +1,6 @@
 ---
 name: aplicacao-financas-instructions
-description: "Instruções de projeto para o agente — aplicação web de finanças pessoais (backend: Django+DRF, frontend: Next.js com React)."
+description: "Instruções de projeto para o agente — aplicação web de finanças pessoais (backend: Django+DRF, frontend: Next.js, App Router, TypeScript e React)."
 applyTo: "**"
 ---
 
@@ -22,6 +22,8 @@ Mapa de especificações
 - `spec004.md`: dashboard.
 - `spec005.md`: perfil.
 - `spec006.md`: análise de perfil.
+- `spec007.md`: orçamento de gastos.
+- `spec008.md`: importação e exportação de planilhas.
 
 Regra de uso das specs
 - Antes de alterar qualquer módulo, ler a spec correspondente.
@@ -40,11 +42,13 @@ Requisitos funcionais (resumo)
 - **Dashboard:** visão consolidada com filtros.
 - **Perfil:** consulta e atualização de dados do usuário.
 - **Análise de perfil:** indicadores e insights financeiros.
+- **Orçamentos:** registro e acompanhamento de limites de gastos mensais gerais e por categoria.
+- **Planilhas:** importação, exportação e download de template XLSX do formato legado.
 
 Requisitos não funcionais
 - **Backend:** Django + Django REST Framework.
 - **Autenticação:** JWT (access + refresh). Indicar estratégia segura para armazenamento do token.
-- **Frontend:** Next.js com React.
+- **Frontend:** Next.js (App Router) com TypeScript e React.
 - **Arquitetura:** seguir os princípios do 12-factor app (config via env, logs stdout, processos stateless, backing services como recursos anexáveis).
 - **CI/CD & Qualidade:** Jenkins para pipeline; integração com SonarQube para análise estática.
 
@@ -63,8 +67,8 @@ Diretivas de implementação (backend)
 - Recorrência: lançamentos recorrentes devem ser compatíveis com Celery + Redis; se isso não estiver disponível no ambiente, documentar a alternativa com cron job antes de implementar.
 
 Diretivas de implementação (frontend)
-- Framework: Next.js com React (versão 13+, preferindo App Router quando aplicável).
-- Linguagem: TypeScript é recomendado para melhor tipagem e qualidade de código.
+- Framework: Next.js com React (versão 13+, uso obrigatório do App Router).
+- Linguagem: TypeScript (uso obrigatório) para segurança de tipos e qualidade de código.
 - Organização obrigatória: componentes reutilizáveis, hooks customizados, serviços de API, layout e páginas conforme estrutura do Next.js.
 - Autenticação: usar cookies `HttpOnly` para armazenar JWT; implementar middleware do Next.js para validação em rotas protegidas.
 - Consumo de API: usar `fetch` nativo, `axios` ou bibliotecas como `SWR`/`React Query` para gerenciamento de estado assíncrono.
@@ -111,7 +115,7 @@ Exemplos de prompts para o agente
 - "Crie a página do dashboard no Next.js conforme a spec004, com filtros e consumo da API REST compatível com a especificação, incluindo testes de componentes."
 
 Regras fixas do projeto
-- Frontend obrigatoriamente com Next.js e React.
+- Frontend obrigatoriamente com Next.js (App Router), TypeScript e React.
 - Backend exclusivamente em Django + DRF.
 - Banco de dados definitivo: PostgreSQL.
 - Tokens: preferir cookies `HttpOnly`.
