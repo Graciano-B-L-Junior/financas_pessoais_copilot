@@ -198,4 +198,10 @@ export const api = {
     get: (params?: Record<string, string | undefined>) =>
       apiRequest("/analytics/profile/", { params }),
   },
+  chat: {
+    sendMessage: (message: string) =>
+      apiRequest("/chat/message/", { method: "POST", data: { message } }),
+    getHistory: () => apiRequest("/chat/history/"),
+    clearHistory: () => apiRequest("/chat/history/", { method: "DELETE" }),
+  },
 };

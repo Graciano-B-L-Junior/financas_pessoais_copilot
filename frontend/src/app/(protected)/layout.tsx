@@ -4,6 +4,7 @@ import { normalizeItem } from "@/lib/normalizers";
 import { NavApp } from "@/components/layout/NavApp";
 import { ChartBootstrap } from "@/components/layout/ChartBootstrap";
 import { Footer } from "@/components/layout/Footer";
+import { AiChatWidget } from "@/components/ui/AiChatWidget";
 import type { User } from "@/types";
 
 export default async function ProtectedLayout({
@@ -33,6 +34,7 @@ export default async function ProtectedLayout({
         </div>
       </div>
       <ChartBootstrap />
+      <AiChatWidget />
     </body>
   );
 }

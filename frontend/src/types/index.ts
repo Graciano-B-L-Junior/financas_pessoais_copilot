@@ -129,6 +129,29 @@ export interface CategoryEvolutionBudget {
   budgeted_amount: number;
 }
 
+// ─── AI Chat ──────────────────────────────────────────────────
+export type ChatRole = "user" | "assistant";
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  created_at: string;
+}
+
+export interface ChatHistory {
+  session_id: string;
+  messages: ChatMessage[];
+}
+
+export interface ChatSendResponse {
+  session_id: string;
+  id: string;
+  role: ChatRole;
+  content: string;
+  created_at: string;
+}
+
 export interface CategoryEvolutionResponse {
   granularity: CategorySeriesGranularity;
   category: {

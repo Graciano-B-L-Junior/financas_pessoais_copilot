@@ -55,6 +55,7 @@ export default async function DashboardPage({
     label: c.is_active ? c.name : `${c.name} (inativa)`,
   }));
   const expenseCategories = categories.filter((category) => category.type === "despesa");
+  const activeExpenseCategories = expenseCategories.filter((category) => category.is_active);
   const recentTransactions = normalizeList<Transaction>(transactionsRes.data).slice(0, 6);
 
   const monthlySeries = dashboard.monthly_series || [];
@@ -320,7 +321,7 @@ export default async function DashboardPage({
                 <option value="">
                   Escolha uma categoria para ver a evolução
                 </option>
-                {expenseCategories.map((c) => (
+                {activeExpenseCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>

@@ -8,6 +8,7 @@ from apps.accounts.views import CookieTokenObtainPairView, CookieTokenRefreshVie
 from apps.analytics.views import DashboardView, ProfileAnalyticsView, CategorySeriesView, CategoryMonthsView
 from apps.budgets.views import BudgetViewSet
 from apps.categories.views import CategoryViewSet
+from apps.ai_chat.views import ChatMessageView, ChatHistoryView
 from apps.transactions.views import (
     TransactionViewSet,
     SpreadsheetPreviewView,
@@ -37,5 +38,7 @@ urlpatterns = [
     path("api/v1/transactions/import/confirm/", SpreadsheetConfirmView.as_view(), name="spreadsheet-confirm"),
     path("api/v1/transactions/export/", SpreadsheetExportView.as_view(), name="spreadsheet-export"),
     path("api/v1/transactions/template/", SpreadsheetTemplateView.as_view(), name="spreadsheet-template"),
+    path("api/v1/chat/message/", ChatMessageView.as_view(), name="chat-message"),
+    path("api/v1/chat/history/", ChatHistoryView.as_view(), name="chat-history"),
     path("api/v1/", include(router.urls)),
 ]

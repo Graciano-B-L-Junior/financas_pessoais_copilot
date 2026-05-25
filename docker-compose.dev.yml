@@ -88,6 +88,15 @@ services:
     ports:
       - "8080:8080"
 
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+
 volumes:
   db-data:
   redis-data:

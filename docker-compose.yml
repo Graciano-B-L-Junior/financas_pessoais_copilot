@@ -71,5 +71,23 @@ services:
       timeout: 5s
       retries: 5
 
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
 volumes:
   postgres_data:
+  ollama_data:

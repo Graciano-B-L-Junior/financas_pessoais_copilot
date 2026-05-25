@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "apps.budgets",
     "apps.transactions",
     "apps.analytics",
+    "apps.ai_chat",
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,12 @@ SIMPLE_JWT = {
 
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# ─── Ollama / AI Chat ─────────────────────────────────────────
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "60"))
+CHAT_RATE_LIMIT_PER_MINUTE = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "10"))
 
 LOGGING = {
     "version": 1,
