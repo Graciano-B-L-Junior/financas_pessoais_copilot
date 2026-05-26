@@ -4,7 +4,7 @@
 Permitir que o usuário autenticado converse com um assistente de inteligência artificial em linguagem natural, fazendo perguntas sobre sua renda, despesas, orçamentos e padrões financeiros. O assistente utiliza os dados reais do usuário no banco de dados para formular respostas precisas e contextualizadas em português brasileiro.
 
 ## 2. Escopo
-Este módulo cobre a interface de chat flutuante no frontend, o backend de processamento de mensagens com injeção de contexto financeiro e a integração segura com o LLM `llama3.2:3b` servido localmente pelo Ollama.
+Este módulo cobre a interface de chat flutuante no frontend, o backend de processamento de mensagens com injeção de contexto financeiro e a integração segura com o LLM `qwen3.5:0.8b` servido localmente pelo Ollama.
 
 Está fora do escopo:
 - Execução de ações (criar, editar ou excluir lançamentos via chat).
@@ -231,7 +231,7 @@ sequenceDiagram
     participant BE as Backend (Django)
     participant DB as PostgreSQL
     participant CL as Celery Worker
-    participant OL as Ollama (llama3.2:3b)
+    participant OL as Ollama (qwen3.5:0.8b)
 
     U->>FE: digita mensagem no chat flutuante
     FE->>BE: POST /api/v1/chat/message/
@@ -264,7 +264,7 @@ sequenceDiagram
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | URL interna do serviço Ollama |
-| `OLLAMA_MODEL` | `llama3.2:3b` | Modelo a ser utilizado |
+| `OLLAMA_MODEL` | `qwen3.5:0.8b` | Modelo a ser utilizado |
 | `OLLAMA_TIMEOUT` | `60` | Timeout em segundos para chamada ao LLM |
 | `CHAT_RATE_LIMIT_PER_MINUTE` | `10` | Máximo de mensagens por usuário por minuto |
 | `CHAT_MAX_HISTORY_TURNS` | `10` | Pares de mensagens enviados como histórico ao LLM |

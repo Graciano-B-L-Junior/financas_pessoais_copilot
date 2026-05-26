@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-MODEL="${OLLAMA_MODEL:-llama3.2:3b}"
+MODEL="${OLLAMA_MODEL:-qwen3.5:0.8b}"
 
 # Inicia o servidor ollama em background
 ollama serve &

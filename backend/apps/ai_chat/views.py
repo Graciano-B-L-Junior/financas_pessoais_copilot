@@ -7,11 +7,11 @@ from rest_framework.views import APIView
 from .models import ChatMessage
 from .serializers import ChatHistorySerializer, ChatMessageSerializer
 from .services import (
-    build_financial_context,
-    build_prompt,
-    call_ollama,
-    check_rate_limit,
-    get_or_create_active_session,
+    RateLimiter,
+    ChatSessionManager,
+    FinancialContextBuilder,
+    PromptBuilder,
+    OllamaClient,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,14 @@ class ChatMessageView(APIView):
     Envia uma mensagem ao assistente e retorna a resposta do LLM.
     """
     permission_classes = [IsAuthenticated]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.rate_limiter = RateLimiter()
+        self.session_manager = ChatSessionManager()
+        self.context_builder = FinancialContextBuilder()
+        self.prompt_builder = PromptBuilder()
+        self.ollama_client = OllamaClient()
 
     def post(self, request):
         message_text = (request.data.get("message") or "").strip()
@@ -42,7 +50,7 @@ class ChatMessageView(APIView):
             )
 
         # SEC-004: rate limiting via cache Redis
-        if not check_rate_limit(request.user.id):
+        if not self.rate_limiter.check(request.user.id):
             return Response(
                 {
                     "status": 429,
@@ -53,7 +61,7 @@ class ChatMessageView(APIView):
             )
 
         # C005: recupera ou cria sessão ativa
-        session = get_or_create_active_session(request.user)
+        session = self.session_manager.get_or_create_active_session(request.user)
 
         # C006: últimos N pares como histórico
         recent_messages = list(
@@ -63,10 +71,10 @@ class ChatMessageView(APIView):
         history = [{"role": m.role, "content": m.content} for m in recent_messages]
 
         # C003, SEC-003: contexto financeiro somente do usuário autenticado
-        context = build_financial_context(request.user)
+        context = self.context_builder.build(request.user)
 
         # SEC-001: prompt estruturado com delimitadores
-        prompt = build_prompt(context, message_text, history)
+        prompt = self.prompt_builder.build(context, message_text, history)
 
         # Persiste mensagem do usuário
         user_msg = ChatMessage.objects.create(
@@ -76,7 +84,7 @@ class ChatMessageView(APIView):
         )
 
         # Chama o LLM
-        llm_response = call_ollama(prompt)
+        llm_response = self.ollama_client.generate(prompt)
 
         if llm_response is None:
             # Deleta a mensagem do usuário para não poluir o histórico
@@ -121,8 +129,12 @@ class ChatHistoryView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.session_manager = ChatSessionManager()
+
     def get(self, request):
-        session = get_or_create_active_session(request.user)
+        session = self.session_manager.get_or_create_active_session(request.user)
         return Response(
             {
                 "status": 200,
