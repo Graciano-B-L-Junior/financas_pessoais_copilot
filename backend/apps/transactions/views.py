@@ -193,7 +193,74 @@ class SpreadsheetConfirmView(APIView):
 
         # Importação síncrona: arquivos pequenos ou fallback quando broker está fora
         result = import_transactions_task(request.user.pk, payload_rows, category_map)
-        return Response({"created": result["created"], "skipped": result["skipped"]}, status=status.HTTP_201_CREATED)
+        return Response({"created": result["created"], "skipped": result["skipped"], "total": result.get("total", len(payload_rows))}, status=status.HTTP_201_CREATED)
+
+
+class ImportTaskStatusView(APIView):
+    """
+    GET /api/v1/transactions/import/status/<task_id>/
+    Retorna o estado atual de uma tarefa de importação Celery.
+
+    Estados possíveis: PENDING | STARTED | PROGRESS | SUCCESS | FAILURE | RETRY | UNKNOWN
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, task_id: str):
+        from celery.result import AsyncResult
+
+        try:
+            result = AsyncResult(task_id)
+            state = result.state
+
+            if state == "PENDING":
+                return Response({"state": "PENDING", "percent": 0, "created": 0, "skipped": 0, "total": 0, "error": None})
+
+            if state == "STARTED":
+                return Response({"state": "STARTED", "percent": 0, "created": 0, "skipped": 0, "total": 0, "error": None})
+
+            if state == "PROGRESS":
+                meta = result.info or {}
+                return Response({
+                    "state": "PROGRESS",
+                    "percent": meta.get("percent", 0),
+                    "created": meta.get("created", 0),
+                    "skipped": meta.get("skipped", 0),
+                    "total": meta.get("total", 0),
+                    "error": None,
+                })
+
+            if state == "SUCCESS":
+                info = result.get(propagate=False) or {}
+                return Response({
+                    "state": "SUCCESS",
+                    "percent": 100,
+                    "created": info.get("created", 0),
+                    "skipped": info.get("skipped", 0),
+                    "total": info.get("total", 0),
+                    "error": None,
+                })
+
+            if state == "FAILURE":
+                error_msg = str(result.info) if result.info else "Erro desconhecido durante a importação."
+                return Response({
+                    "state": "FAILURE",
+                    "percent": 0,
+                    "created": 0,
+                    "skipped": 0,
+                    "total": 0,
+                    "error": error_msg,
+                })
+
+            if state == "RETRY":
+                return Response({"state": "RETRY", "percent": 0, "created": 0, "skipped": 0, "total": 0, "error": None})
+
+            # Estado desconhecido ou expirado
+            return Response({"state": "UNKNOWN", "percent": 0, "created": 0, "skipped": 0, "total": 0, "error": None})
+
+        except Exception as exc:
+            logger.exception("Erro ao consultar status da task %s: %s", task_id, exc)
+            return Response({"state": "UNKNOWN", "percent": 0, "created": 0, "skipped": 0, "total": 0, "error": None})
 
 
 class SpreadsheetExportView(APIView):

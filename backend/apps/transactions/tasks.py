@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+_PROGRESS_INTERVAL = 10  # emite update_state a cada N rows
+
+
 @shared_task(bind=True, max_retries=3)
 def import_transactions_task(self, user_id: int, rows: list[dict], category_map: dict[str, int]) -> dict:
     """
@@ -26,49 +29,57 @@ def import_transactions_task(self, user_id: int, rows: list[dict], category_map:
     """
     from apps.transactions.models import Transaction
 
+    total = len(rows)
+
+    def _emit(idx: int, created: int, skipped: int) -> None:
+        percent = int((idx + 1) / total * 100) if total else 100
+        self.update_state(
+            state="PROGRESS",
+            meta={"percent": percent, "created": created, "skipped": skipped, "total": total},
+        )
+
     try:
         user = User.objects.get(pk=user_id)
         created = 0
         skipped = 0
 
-        for row in rows:
+        for idx, row in enumerate(rows):
             cat_id = category_map.get(row["category_name"])
             if not cat_id:
                 skipped += 1
-                continue
+            else:
+                # Verificar duplicata: mesmo dia + valor + descrição
+                already_exists = Transaction.objects.filter(
+                    user=user,
+                    date=row["date_str"],
+                    amount=Decimal(str(row["amount"])),
+                    description=row["description"],
+                ).exists()
 
-            # Verificar duplicata: mesmo dia + valor + descrição
-            already_exists = Transaction.objects.filter(
-                user=user,
-                date=row["date_str"],
-                amount=Decimal(str(row["amount"])),
-                description=row["description"],
-            ).exists()
+                if already_exists:
+                    skipped += 1
+                else:
+                    from apps.categories.models import Category
 
-            if already_exists:
-                skipped += 1
-                continue
+                    try:
+                        category = Category.objects.get(pk=cat_id, user=user)
+                    except Category.DoesNotExist:
+                        skipped += 1
+                    else:
+                        Transaction.objects.create(
+                            user=user,
+                            category=category,
+                            description=row["description"],
+                            amount=Decimal(str(row["amount"])),
+                            type=category.type,
+                            date=row["date_str"],
+                        )
+                        created += 1
 
-            # Inferir tipo a partir da categoria
-            from apps.categories.models import Category
+            if idx % _PROGRESS_INTERVAL == 0 or idx == total - 1:
+                _emit(idx, created, skipped)
 
-            try:
-                category = Category.objects.get(pk=cat_id, user=user)
-            except Category.DoesNotExist:
-                skipped += 1
-                continue
-
-            Transaction.objects.create(
-                user=user,
-                category=category,
-                description=row["description"],
-                amount=Decimal(str(row["amount"])),
-                type=category.type,
-                date=row["date_str"],
-            )
-            created += 1
-
-        return {"created": created, "skipped": skipped}
+        return {"created": created, "skipped": skipped, "total": total}
 
     except Exception as exc:
         logger.exception("Erro na task import_transactions_task: %s", exc)

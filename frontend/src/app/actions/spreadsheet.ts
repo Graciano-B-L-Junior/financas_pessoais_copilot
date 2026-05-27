@@ -51,7 +51,7 @@ export async function importConfirmAction(
   const response = await api.transactions.importConfirm({ rows, category_map });
 
   if (response.status === 201) {
-    const data = response.data as { created: number; skipped: number };
+    const data = response.data as { created: number; skipped: number; total: number };
     await setFlash(
       "success",
       `Importação concluída: ${data.created} lançamento(s) criado(s), ${data.skipped} ignorado(s).`
@@ -61,9 +61,8 @@ export async function importConfirmAction(
   }
 
   if (response.status === 202) {
-    await setFlash("success", "Importação em andamento. Os lançamentos serão criados em instantes.");
-    revalidatePath("/lancamentos");
-    redirect("/lancamentos");
+    const data = response.data as { task_id: string; queued: number };
+    return { ok: true, data: { taskId: data.task_id, queued: data.queued } } as ActionState<{ taskId: string; queued: number }>;
   }
 
   if ([400, 422].includes(response.status)) {

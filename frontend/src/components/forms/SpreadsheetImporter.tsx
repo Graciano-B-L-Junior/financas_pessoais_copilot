@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { importPreviewAction, importConfirmAction } from "@/app/actions/spreadsheet";
 import { createCategoriesBulkAction } from "@/app/actions/categories";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { ImportProgressBar } from "@/components/forms/ImportProgressBar";
 import type { ActionState, ImportPreviewResult, ImportPreviewRow } from "@/types";
 
 const INITIAL_PREVIEW: ActionState<ImportPreviewResult> = { ok: false };
@@ -24,6 +25,7 @@ export function SpreadsheetImporter() {
   const [createPending, startCreateTransition] = useTransition();
   const [createResult, setCreateResult] = useState<{ created: number; skipped: number } | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  const [asyncTask, setAsyncTask] = useState<{ taskId: string; queued: number } | null>(null);
 
   const preview = previewState.ok ? previewState.data! : null;
 
@@ -33,6 +35,14 @@ export function SpreadsheetImporter() {
     setSelectedCategories(new Set(missingCats ?? []));
     setCreateResult(null);
   }, [missingCats]);
+
+  // Detecta resposta assíncrona (202) do confirm e inicia polling
+  useEffect(() => {
+    if (confirmState.ok && confirmState.data && "taskId" in confirmState.data) {
+      const { taskId, queued } = confirmState.data as { taskId: string; queued: number };
+      setAsyncTask({ taskId, queued });
+    }
+  }, [confirmState]);
 
   // Linhas confirmáveis = sem erros E com categoria existente
   const confirmableRows = preview
@@ -57,8 +67,20 @@ export function SpreadsheetImporter() {
 
   return (
     <div style={{ display: "grid", gap: "3rem" }}>
+      {/* ── Progresso de importação assíncrona ── */}
+      {asyncTask && (
+        <ImportProgressBar
+          taskId={asyncTask.taskId}
+          queued={asyncTask.queued}
+          onRetry={() => {
+            setAsyncTask(null);
+            window.location.reload();
+          }}
+        />
+      )}
+
       {/* ── Etapa 1: Upload ── */}
-      {!preview && (
+      {!preview && !asyncTask && (
         <form ref={formRef} action={previewAction} style={{ display: "grid", gap: "2rem" }}>
           <div className="upload-zone">
             <label htmlFor="file-upload" className="upload-label">

@@ -253,3 +253,22 @@ export interface ImportPreviewResult {
   rows: ImportPreviewRow[];
 }
 
+// ─── Status de Tarefa Assíncrona de Importação ───────────────
+export type ImportTaskState =
+  | "PENDING"
+  | "STARTED"
+  | "PROGRESS"
+  | "SUCCESS"
+  | "FAILURE"
+  | "RETRY"
+  | "UNKNOWN";
+
+export interface ImportTaskStatus {
+  state: ImportTaskState;
+  percent: number;
+  created: number;
+  skipped: number;
+  total: number;
+  error: string | null;
+}
+

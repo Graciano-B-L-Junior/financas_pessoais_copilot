@@ -938,9 +938,84 @@ button.btn:hover,
   margin: 0;
 }
 
+/* ── Progress Bar de Importação ─────────────────────────── */
+.progress-container {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1.75rem 1.5rem;
+  background: var(--surface-muted);
+  display: grid;
+  gap: 1rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.progress-percent {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  height: 10px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-strong);
+  border-radius: 999px;
+  transition: width 400ms ease;
+}
+
+.progress-fill--success {
+  background: var(--success);
+}
+
+.progress-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.progress-stats strong {
+  color: var(--ink);
+}
+
+.progress-message {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.progress-message--success {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.progress-message--error {
+  color: var(--danger);
+}
+
+.progress-message--warning {
+  color: var(--ink);
+}
+
 /* Summary cards */
 .stat-card {
-  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 1.25rem 1rem;
   background: var(--surface-muted);
