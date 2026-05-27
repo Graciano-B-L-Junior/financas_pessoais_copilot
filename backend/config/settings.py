@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     "apps.budgets",
     "apps.transactions",
     "apps.analytics",
-    "apps.ai_chat",
 ]
 
 MIDDLEWARE = [
