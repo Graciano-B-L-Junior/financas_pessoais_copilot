@@ -5,6 +5,7 @@ import { importPreviewAction, importConfirmAction } from "@/app/actions/spreadsh
 import { createCategoriesBulkAction } from "@/app/actions/categories";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { ImportProgressBar } from "@/components/forms/ImportProgressBar";
+import { PreviewProgressBar } from "@/components/forms/PreviewProgressBar";
 import type { ActionState, ImportPreviewResult, ImportPreviewRow } from "@/types";
 
 const INITIAL_PREVIEW: ActionState<ImportPreviewResult> = { ok: false };
@@ -82,6 +83,8 @@ export function SpreadsheetImporter() {
       {/* ── Etapa 1: Upload ── */}
       {!preview && !asyncTask && (
         <form ref={formRef} action={previewAction} style={{ display: "grid", gap: "2rem" }}>
+          {/* Barra de progresso durante a análise (preview) */}
+          {previewPending && <PreviewProgressBar />}
           <div className="upload-zone">
             <label htmlFor="file-upload" className="upload-label">
               <p className="upload-text">
