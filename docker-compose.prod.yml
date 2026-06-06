@@ -39,15 +39,15 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env.prod
-    ports:
-      - "3000:3000"
+    expose:
+      - "8000"
     depends_on:
       - db
       - redis
     environment:
       - NODE_ENV=production
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -62,10 +62,29 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env.prod
-    command: npm run worker
+    command: celery -A config worker -l info
     depends_on:
       - db
       - redis
+    networks:
+      - financas-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./frontend/.env.prod.example
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - financas-net
 
@@ -80,6 +99,7 @@ services:
       - ./deployment/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
+      - frontend
     networks:
       - financas-net
 
