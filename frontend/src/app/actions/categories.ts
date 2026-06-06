@@ -82,6 +82,11 @@ export async function deleteCategoryAction(id: number | string): Promise<void> {
   redirect("/categorias");
 }
 
+function getCategoryTypeForName(name: string): "receita" | "despesa" {
+  const normalized = name.trim().toLowerCase();
+  return normalized === "receita" ? "receita" : "despesa";
+}
+
 export async function createCategoriesBulkAction(
   names: string[]
 ): Promise<ActionState<{ created: number; skipped: number }>> {
@@ -91,7 +96,7 @@ export async function createCategoriesBulkAction(
   for (const name of names) {
     const response = await api.categories.create({
       name,
-      type: "despesa",
+      type: getCategoryTypeForName(name),
       description: "",
       is_active: true,
     });

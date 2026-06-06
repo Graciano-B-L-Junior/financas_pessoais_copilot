@@ -238,6 +238,7 @@ export interface ImportPreviewRow {
   day: number | null;
   amount: string | null;
   date: string | null;
+  type: TransactionType;
   errors: string[];
   is_valid: boolean;
   category_exists: boolean;

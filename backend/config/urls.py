@@ -13,7 +13,6 @@ from apps.transactions.views import (
     SpreadsheetPreviewView,
     SpreadsheetConfirmView,
     SpreadsheetExportView,
-    SpreadsheetTemplateView,
     ImportTaskStatusView,
 )
 
@@ -38,6 +37,5 @@ urlpatterns = [
     path("api/v1/transactions/import/confirm/", SpreadsheetConfirmView.as_view(), name="spreadsheet-confirm"),
     path("api/v1/transactions/import/status/<str:task_id>/", ImportTaskStatusView.as_view(), name="import-task-status"),
     path("api/v1/transactions/export/", SpreadsheetExportView.as_view(), name="spreadsheet-export"),
-    path("api/v1/transactions/template/", SpreadsheetTemplateView.as_view(), name="spreadsheet-template"),
     path("api/v1/", include(router.urls)),
 ]

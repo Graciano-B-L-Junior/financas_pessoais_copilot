@@ -119,12 +119,6 @@ export default async function LancamentosPage({
             >
               Exportar
             </a>
-            <a
-              href="/api/template"
-              className="btn btn--ghost text-sm"
-            >
-              Baixar Template
-            </a>
           </div>
         </div>
 

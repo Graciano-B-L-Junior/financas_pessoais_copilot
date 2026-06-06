@@ -37,6 +37,9 @@ MONTH_MAP: dict[str, int] = {
     "dezembro": 12,
 }
 
+INCOME_TYPE = "receita"
+EXPENSE_TYPE = "despesa"
+
 # Nomes que NÃO devem ser usados como categoria
 _IGNORE_LABELS = frozenset(
     [
@@ -64,6 +67,7 @@ class ImportRow:
     description: str
     day: int | None
     amount: Decimal | None
+    type: str
     # campos construídos / validados
     date_str: str | None = None  # ISO "YYYY-MM-DD"
     errors: list[str] = field(default_factory=list)
@@ -154,6 +158,52 @@ def _infer_year_from_filename(filename: str) -> int | None:
     return None
 
 
+def _parse_income_summary_sheet(ws, year: int, result: ParseResult, all_categories: set[str]) -> None:
+    """Lê a aba de resumo de receita e adiciona lançamentos mensais de receita."""
+    row_number = 10
+    category_name = "Receita"
+    has_data = False
+
+    for month_number, column in enumerate(range(2, 14), start=1):
+        value = ws.cell(row=row_number, column=column).value
+        if value is None or str(value).strip() == "":
+            continue
+
+        has_data = True
+        description = "Receita mensal"
+        day = 1
+        amount = _parse_amount(value)
+        errors: list[str] = []
+
+        if amount is None:
+            errors.append("Valor ausente ou não-numérico.")
+        elif amount < Decimal("0"):
+            errors.append(f"Valor negativo: {amount}.")
+        elif amount == Decimal("0"):
+            errors.append("Valor igual a zero.")
+
+        date_str, date_errors = _build_date(year, month_number, day)
+        errors.extend(date_errors)
+
+        result.rows.append(
+            ImportRow(
+                row_number=row_number,
+                sheet=ws.title,
+                category_name=category_name,
+                description=description,
+                day=day,
+                amount=amount,
+                type=INCOME_TYPE,
+                date_str=date_str,
+                errors=errors,
+            )
+        )
+
+    if has_data:
+        all_categories.add(category_name)
+        result.sheets_found.append(ws.title)
+
+
 def parse_xlsx(file: IO[bytes], filename: str = "", year: int | None = None) -> ParseResult:
     """
     Lê um arquivo XLSX no formato legado e retorna um ParseResult com todas as linhas extraídas,
@@ -170,8 +220,9 @@ def parse_xlsx(file: IO[bytes], filename: str = "", year: int | None = None) -> 
     wb = openpyxl.load_workbook(file, data_only=True, read_only=True)
 
     for sheet_name in wb.sheetnames:
-        # Ignorar aba consolidadora
-        if _normalize(sheet_name) in ("gastos e acompanhamentos",):
+        normalized_sheet_name = _normalize(sheet_name)
+        if normalized_sheet_name in ("gastos e acompanhamentos", "gastos e acompanhamento 2018"):
+            _parse_income_summary_sheet(wb[sheet_name], year, result, all_categories)
             continue
 
         # Inferir mês a partir do nome da aba (ex: "Gastos Abril" → abril → 4)
@@ -266,6 +317,7 @@ def parse_xlsx(file: IO[bytes], filename: str = "", year: int | None = None) -> 
                         description=description,
                         day=day,
                         amount=amount,
+                        type=EXPENSE_TYPE,
                         date_str=date_str,
                         errors=errors,
                     )

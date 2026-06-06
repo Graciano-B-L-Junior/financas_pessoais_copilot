@@ -7,8 +7,16 @@ import type { ImportTaskStatus, ImportTaskState } from "@/types";
 const POLL_INTERVAL_MS = 2_000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutos
 const MAX_CONSECUTIVE_FAILURES = 3;
+const TASK_STORAGE_KEY = "spreadsheet_import_task";
+const TASK_EXPIRY_MS = 6 * 60 * 60 * 1_000; // 6 horas
 
 const TERMINAL_STATES: ImportTaskState[] = ["SUCCESS", "FAILURE", "UNKNOWN"];
+
+interface StoredTask {
+  taskId: string;
+  queued: number;
+  timestamp: number;
+}
 
 interface ImportProgressBarProps {
   taskId: string;
@@ -35,6 +43,33 @@ export function ImportProgressBar({ taskId, queued, onRetry }: ImportProgressBar
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+    }
+  }
+
+  // Salvar task em localStorage ao montar
+  useEffect(() => {
+    try {
+      const stored: StoredTask = {
+        taskId,
+        queued,
+        timestamp: Date.now(),
+      };
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(stored));
+      }
+    } catch (e) {
+      console.warn("Falha ao salvar task em localStorage:", e);
+    }
+  }, [taskId, queued]);
+
+  // Limpar localStorage após conclusão ou expiração
+  function clearStoredTask() {
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(TASK_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn("Falha ao limpar localStorage:", e);
     }
   }
 
@@ -65,6 +100,7 @@ export function ImportProgressBar({ taskId, queued, onRetry }: ImportProgressBar
 
         if (TERMINAL_STATES.includes(data.state)) {
           stopPolling();
+          clearStoredTask();
 
           if (data.state === "SUCCESS") {
             // Pequeno delay para o usuário ver 100% antes do redirect
@@ -72,12 +108,18 @@ export function ImportProgressBar({ taskId, queued, onRetry }: ImportProgressBar
               router.push("/lancamentos");
             }, 1500);
           }
+
+          // Se task expirou no backend, limpar e mostrar erro
+          if (data.state === "UNKNOWN") {
+            console.warn("Task expirou no backend ou não foi encontrada");
+          }
         }
       } catch {
         consecutiveFailures.current += 1;
         if (consecutiveFailures.current >= MAX_CONSECUTIVE_FAILURES) {
           stopPolling();
           setTimedOut(true);
+          clearStoredTask();
         }
       }
     }
@@ -86,8 +128,17 @@ export function ImportProgressBar({ taskId, queued, onRetry }: ImportProgressBar
     poll();
     intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
 
-    return stopPolling;
+    return () => {
+      stopPolling();
+    };
   }, [taskId, router]);
+
+  // Limpar localStorage se timeout global
+  useEffect(() => {
+    if (timedOut) {
+      clearStoredTask();
+    }
+  }, [timedOut]);
 
   const isFinished = TERMINAL_STATES.includes(status.state) || timedOut;
   const isFailed = status.state === "FAILURE";

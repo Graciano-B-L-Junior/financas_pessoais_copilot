@@ -10,6 +10,14 @@ import type { ActionState, ImportPreviewResult, ImportPreviewRow } from "@/types
 
 const INITIAL_PREVIEW: ActionState<ImportPreviewResult> = { ok: false };
 const INITIAL_CONFIRM: ActionState = { ok: false };
+const TASK_STORAGE_KEY = "spreadsheet_import_task";
+const TASK_EXPIRY_MS = 6 * 60 * 60 * 1_000; // 6 horas
+
+interface StoredTask {
+  taskId: string;
+  queued: number;
+  timestamp: number;
+}
 
 export function SpreadsheetImporter() {
   const [previewState, previewAction, previewPending] = useActionState(
@@ -29,6 +37,24 @@ export function SpreadsheetImporter() {
   const [asyncTask, setAsyncTask] = useState<{ taskId: string; queued: number } | null>(null);
 
   const preview = previewState.ok ? previewState.data! : null;
+
+  // Restaurar asyncTask do localStorage se existir e for válido (ao recarregar a página)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && !asyncTask) {
+        const stored = window.localStorage.getItem(TASK_STORAGE_KEY);
+        if (stored) {
+          const { taskId, queued, timestamp } = JSON.parse(stored) as StoredTask;
+          // Validar se o task ainda é válido (não expirou)
+          if (Date.now() - timestamp < TASK_EXPIRY_MS) {
+            setAsyncTask({ taskId, queued });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Falha ao restaurar task do localStorage:", e);
+    }
+  }, []);
 
   // Inicializa / reseta a seleção sempre que uma nova análise retorna categorias faltantes
   const missingCats = preview?.missing_categories;
@@ -158,7 +184,7 @@ export function SpreadsheetImporter() {
 
               {createResult ? (
                 <p style={{ margin: 0, color: "var(--success)", fontWeight: 500 }}>
-                  ✓ {createResult.created} categoria(s) criada(s) como <em>Despesa</em>.
+                  ✓ {createResult.created} categoria(s) criada(s).
                   {createResult.skipped > 0 && ` ${createResult.skipped} ignorada(s) (já existem).`}
                   {" "}Re-analisando o arquivo...
                 </p>
@@ -224,8 +250,8 @@ export function SpreadsheetImporter() {
                         : `Criar ${selectedCategories.size} categoria(s) selecionada(s)`}
                     </button>
                     <span style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
-                      Serão criadas como <strong>Despesa</strong>. Edite o tipo depois em{" "}
-                      <a href="/categorias">Categorias</a>.
+                      Categorias serão criadas com tipo apropriado, por exemplo <strong>Receita</strong> para categorias de receita.
+                      Edite o tipo depois em <a href="/categorias">Categorias</a>.
                     </span>
                   </div>
                 </>

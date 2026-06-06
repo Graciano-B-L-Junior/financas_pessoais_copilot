@@ -172,7 +172,6 @@ export const api = {
       apiRequest("/transactions/import/confirm/", { method: "POST", data }),
     exportXlsx: (year: number | string) =>
       apiRequest(`/transactions/export/`, { params: { year: String(year) } }),
-    template: () => apiRequest("/transactions/template/"),
   },
   budgets: {
     list: (params?: Record<string, string | undefined>) =>

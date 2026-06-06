@@ -20,9 +20,6 @@ export default async function ImportarPlanilhaPage() {
             gastos (abas por mês, tabelas por categoria).
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
-            <a href="/api/template" className="btn btn--primary text-sm">
-              Baixar Template
-            </a>
             <Link href="/lancamentos" className="btn btn--secondary text-sm">
               Voltar
             </Link>

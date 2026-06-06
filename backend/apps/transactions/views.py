@@ -12,7 +12,7 @@ from apps.categories.models import Category
 
 from .models import Transaction
 from .serializers import TransactionSerializer
-from .services.spreadsheet_parser import ParseResult, generate_template, parse_xlsx
+from .services.spreadsheet_parser import ParseResult, parse_xlsx
 from .tasks import export_transactions_task, import_transactions_task
 
 # Magic bytes para validação sem dependência nativa
@@ -59,6 +59,7 @@ def _serialize_parse_result(result: ParseResult, user) -> dict:
                 "day": row.day,
                 "amount": str(row.amount) if row.amount is not None else None,
                 "date": row.date_str,
+                "type": row.type,
                 "errors": row.errors,
                 "is_valid": row.is_valid,
                 "category_exists": row.category_name.lower() in existing_categories,
@@ -173,6 +174,7 @@ class SpreadsheetConfirmView(APIView):
                 "date_str": r["date"],
                 "amount": r["amount"],
                 "category_name": r["category_name"],
+                "type": r.get("type"),
             }
             for r in valid_rows
         ]
@@ -287,23 +289,4 @@ class SpreadsheetExportView(APIView):
         return response
 
 
-class SpreadsheetTemplateView(APIView):
-    """
-    GET /api/v1/transactions/template/
-    Retorna um XLSX vazio no formato legado com as categorias ativas do usuário.
-    """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        user_categories = list(
-            Category.objects.filter(user=request.user, is_active=True).values_list("name", flat=True)
-        )
-        xlsx_bytes = generate_template(categories=user_categories or None)
-
-        response = HttpResponse(
-            xlsx_bytes,
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-        response["Content-Disposition"] = 'attachment; filename="template_gastos.xlsx"'
-        return response

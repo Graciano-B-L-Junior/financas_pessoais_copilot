@@ -71,7 +71,7 @@ def import_transactions_task(self, user_id: int, rows: list[dict], category_map:
                             category=category,
                             description=row["description"],
                             amount=Decimal(str(row["amount"])),
-                            type=category.type,
+                            type=row.get("type") or category.type,
                             date=row["date_str"],
                         )
                         created += 1
